@@ -8,7 +8,7 @@
 #define LINHAS_INIMIGOS 4
 #define COLUNAS_INIMIGOS 9
 
-typedef struct{// Estrutura que representa um inimigo
+typedef struct Inimigo{// Estrutura que representa um inimigo
     Rectangle corpo;
 
     int linha;
@@ -20,7 +20,7 @@ typedef struct{// Estrutura que representa um inimigo
     struct Inimigo *proximo;
 } Inimigo;
 
-typedef struct{// Estrutura que representa a lista de inimigos
+typedef struct ListaInimigos{// Estrutura que representa a lista de inimigos
     Inimigo *inicio;
 
     int formacao[LINHAS_INIMIGOS][COLUNAS_INIMIGOS];

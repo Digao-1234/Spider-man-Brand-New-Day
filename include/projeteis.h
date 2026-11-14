@@ -4,12 +4,12 @@
 #include "raylib.h"
 #include <stdbool.h>
 
-typedef enum{
+typedef enum TipoProjetil{
     PROJETIL_TEIA = 0,
     PROJETIL_INIMIGO = 1
 } TipoProjetil;
 
-typedef struct{
+typedef struct Projetil{
     Rectangle corpo;
 
     float velocidadeY;
@@ -20,7 +20,7 @@ typedef struct{
 
 } Projetil;
 
-typedef struct{
+typedef struct ListaProjeteis{
     Projetil *inicio;
 
 } ListaProjeteis;

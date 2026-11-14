@@ -7,7 +7,7 @@
 
 struct ListaProjeteis;
 
-typedef struct{
+typedef struct Jogador{
     Rectangle corpo;
 
     float velocidade;

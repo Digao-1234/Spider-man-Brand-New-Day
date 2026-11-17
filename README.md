@@ -54,9 +54,9 @@ Os caminhos de `assets/` e `saves/` são relativos a essa pasta: rodar de outro 
 ### Com make (mais fácil)
 
 ```
-make          # compila
-make run      # compila e executa (Linux/macOS e MSYS2)
-make clean    # apaga o executável
+mingw32-make          # compila
+mingw32-make run      # compila e executa (Linux/macOS e MSYS2)
+mingw32-make clean    # apaga o executável
 ```
 
 O `make` é só um atalho: o jogo pode ser compilado sem ele, com os comandos abaixo.

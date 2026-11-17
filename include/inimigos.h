@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #define LINHAS_INIMIGOS 4
-
 #define COLUNAS_INIMIGOS 9
 
 typedef enum TipoInimigo{ // Tipo do inimigo: define o sprite e o tipo de tiro

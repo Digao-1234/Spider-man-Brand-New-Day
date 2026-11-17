@@ -34,5 +34,4 @@ void SpritesDescarregar(void); // Libera as texturas.
 
 bool SpritesDesenhar(SpriteId id, float x, float y, float altura, float rotacao, Color tint);
 // Desenha o sprite especificado na posição (x, y) com a altura e rotação especificadas, aplicando a cor de tintura.
-
 #endif

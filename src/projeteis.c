@@ -96,11 +96,9 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
     }
 
     for (const Projetil *p = lista->inicio; p != NULL; p = p->proximo){
-        float cx = p->corpo.x + p->corpo.width / 2.0f;
-        // Centro do projetil: o sprite e desenhado em volta desse ponto
+        float cx = p->corpo.x + p->corpo.width / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
 
-        float cy = p->corpo.y + p->corpo.height / 2.0f;
-        // Centro do projetil: o sprite e desenhado em volta desse ponto
+        float cy = p->corpo.y + p->corpo.height / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
 
         if (p->tipo == PROJETIL_TEIA){
             if (!SpritesDesenhar(SPR_TEIA, cx, cy, 34.0f, 0.0f, WHITE)){
@@ -162,7 +160,8 @@ void ProjeteisResolverColisoes(ListaProjeteis *projeteis, ListaInimigos *inimigo
                 
                 Inimigo *inimigo = *eloInimigo;// Define um ponteiro para o inimigo atual
 
-                if (CheckCollisionRecs(p->corpo, inimigo->corpo)){// Verifica se houve colisão entre o projétil de teia e o inimigo
+                if (CheckCollisionRecs(p->corpo, inimigo->corpo)){
+                    // Verifica se houve colisão entre o projétil de teia e o inimigo
                     inimigo->vida--;// Reduz a vida do inimigo em 1
 
                     removerProjetil = true;// Define que o projétil deve ser removido após a colisão
@@ -179,7 +178,6 @@ void ProjeteisResolverColisoes(ListaProjeteis *projeteis, ListaInimigos *inimigo
 
             if (!removerProjetil && fases->chefe.ativo && CheckCollisionRecs(p->corpo, fases->chefe.corpo)){
                 // Verifica colisão com o chefe da fase se o projétil ainda não foi removido e o chefe estiver ativo
-
                 fases->chefe.vida--;// Reduz a vida do chefe em 1
 
                 removerProjetil = true;// Define que o projétil deve ser removido após a colisão com o chefe

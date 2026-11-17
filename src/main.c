@@ -41,8 +41,7 @@ static void PartidaInicializar(Partida *partida){
 
     JogadorInicializar(&partida->jogador);// Inicializa o jogador com suas propriedades iniciais
 
-    InimigosInicializar(&partida->inimigos);
-    // Inicializa a lista de inimigos, configurando a formação e propriedades iniciais
+    InimigosInicializar(&partida->inimigos);// Inicializa a lista de inimigos, configurando a formação e propriedades iniciais
 
     ProjeteisInicializar(&partida->projeteis);
     // Inicializa a lista de projéteis, preparando-a para armazenar os projéteis disparados durante o jogo
@@ -96,8 +95,7 @@ static void SalvarRecordeSeNecessario(Partida *partida){
 static void PartidaAtualizar(Partida *partida, float dt){
     //Atualiza o estado da partida, incluindo o jogador, inimigos, projéteis, fases e verificando condições de vitória ou derrota
 
-    if (partida->estado != JOGO_EM_ANDAMENTO){
-        // Verifica se o jogo não está em andamento, indicando que houve vitória ou derrota
+    if (partida->estado != JOGO_EM_ANDAMENTO){// Verifica se o jogo não está em andamento, indicando que houve vitória ou derrota
 
         if (IsKeyPressed(KEY_ENTER)){// Verifica se a tecla ENTER foi pressionada para reiniciar a partida
             PartidaReiniciar(partida);

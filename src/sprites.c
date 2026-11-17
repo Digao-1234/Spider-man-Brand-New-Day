@@ -82,7 +82,6 @@ bool SpritesDesenhar(SpriteId id, float x, float y, float altura, float rotacao,
 
     if ((int)id < 0 || (int)id >= SPR_TOTAL || altura <= 0.0f || !sprites[id].carregado){
         // Verifica se o id do sprite é válido, se a altura é positiva e se o sprite foi carregado
-
         return false;// Sem textura: quem chamou desenha o retangulo antigo
     }
 

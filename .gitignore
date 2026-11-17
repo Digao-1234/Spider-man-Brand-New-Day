@@ -1,0 +1,30 @@
+# Executáveis
+*.exe
+*.out
+*.o
+*.obj
+*.dll
+
+# Arquivos de compilação e depuração
+*.pdb
+*.ilk
+*.gch
+*.gcda
+*.gcno
+
+# Configurações locais do VS Code
+.vscode/
+
+# Arquivos temporários
+*.tmp
+*.log
+*.bak
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Outras IDEs
+.idea/

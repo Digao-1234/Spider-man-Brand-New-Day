@@ -74,7 +74,8 @@ void ProjeteisAtualizar(ListaProjeteis *lista, float dt){
 
         p->corpo.y += p->velocidadeY * dt;// Atualiza a posição vertical do projétil
 
-        bool foraDaTela = (p->corpo.y + p->corpo.height < 0.0f) || (p->corpo.y > ALTURA_TELA);// Verifica se o projétil saiu da tela
+        bool foraDaTela = (p->corpo.y + p->corpo.height < 0.0f) || (p->corpo.y > ALTURA_TELA);
+        // Verifica se o projétil saiu da tela
 
         if (foraDaTela){
             // Se o projétil estiver fora da tela, remove-o da lista e libera a memória
@@ -95,9 +96,11 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
     }
 
     for (const Projetil *p = lista->inicio; p != NULL; p = p->proximo){
-        float cx = p->corpo.x + p->corpo.width / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
+        float cx = p->corpo.x + p->corpo.width / 2.0f;
+        // Centro do projetil: o sprite e desenhado em volta desse ponto
 
-        float cy = p->corpo.y + p->corpo.height / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
+        float cy = p->corpo.y + p->corpo.height / 2.0f;
+        // Centro do projetil: o sprite e desenhado em volta desse ponto
 
         if (p->tipo == PROJETIL_TEIA){
             if (!SpritesDesenhar(SPR_TEIA, cx, cy, 34.0f, 0.0f, WHITE)){
@@ -112,9 +115,15 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
         else if (p->tipo == PROJETIL_INIMIGO){
             float giro = (float)GetTime() * 720.0f;// O shuriken gira 2 voltas por segundo
 
-            if (!SpritesDesenhar(SPR_TIRO_INIMIGO, cx, cy, 20.0f, giro, WHITE)){
+            if (!SpritesDesenhar(SPR_TIRO_NINJA, cx, cy, 20.0f, giro, WHITE)){
                 // Se o sprite do projétil inimigo não estiver disponível, desenha um retângulo laranja como fallback
                 DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);
+            }
+        } 
+
+        else if (p->tipo == PROJETIL_GUARDA){
+            if (!SpritesDesenhar(SPR_TIRO_GUARDA, cx, cy, 34.0f, 0.0f, WHITE)){
+                DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);// Fallback: retangulo laranja
             }
         } 
 
@@ -168,12 +177,15 @@ void ProjeteisResolverColisoes(ListaProjeteis *projeteis, ListaInimigos *inimigo
                 eloInimigo = &inimigo->proximo;// Avança para o próximo inimigo na lista
             }
 
-            if (!removerProjetil && fases->chefe.ativo && CheckCollisionRecs(p->corpo, fases->chefe.corpo)){// Verifica colisão com o chefe da fase se o projétil ainda não foi removido e o chefe estiver ativo
+            if (!removerProjetil && fases->chefe.ativo && CheckCollisionRecs(p->corpo, fases->chefe.corpo)){
+                // Verifica colisão com o chefe da fase se o projétil ainda não foi removido e o chefe estiver ativo
+
                 fases->chefe.vida--;// Reduz a vida do chefe em 1
 
                 removerProjetil = true;// Define que o projétil deve ser removido após a colisão com o chefe
 
-                if (fases->chefe.vida <= 0){// Se a vida do chefe chegar a 0 ou menos, marca o chefe como inativo e adiciona pontos à pontuação do jogador
+                if (fases->chefe.vida <= 0){
+                    // Se a vida do chefe chegar a 0 ou menos, marca o chefe como inativo e adiciona pontos à pontuação do jogador
                     
                     fases->chefe.vida = 0;// Garante que a vida do chefe não seja negativa
 
@@ -192,19 +204,23 @@ void ProjeteisResolverColisoes(ListaProjeteis *projeteis, ListaInimigos *inimigo
             }
         } 
 
-        else if (CheckCollisionRecs(p->corpo, jogador->corpo)){// Se o projétil for do tipo inimigo, verifica colisão com o jogador
+        else if (CheckCollisionRecs(p->corpo, jogador->corpo)){
+            // Se o projétil for do tipo inimigo, verifica colisão com o jogador
 
-            if (jogador->invulnerabilidade <= 0.0f){// Se o jogador não estiver invulnerável, reduz suas vidas e ativa a invulnerabilidade temporária
+            if (jogador->invulnerabilidade <= 0.0f){
+                // Se o jogador não estiver invulnerável, reduz suas vidas e ativa a invulnerabilidade temporária
                 
                 jogador->vidas--;// Reduz o número de vidas do jogador em 1
 
-                jogador->invulnerabilidade = 1.1f;// Ativa a invulnerabilidade do jogador por 1.1 segundos após ser atingido
+                jogador->invulnerabilidade = 1.1f;
+                // Ativa a invulnerabilidade do jogador por 1.1 segundos após ser atingido
             }
 
             removerProjetil = true;// Define que o projétil deve ser removido após a colisão com o jogador
         }
 
-        if (removerProjetil){// Se o projétil deve ser removido, ajusta os ponteiros da lista e libera a memória do projétil
+        if (removerProjetil){
+            // Se o projétil deve ser removido, ajusta os ponteiros da lista e libera a memória do projétil
             *eloProjetil = p->proximo;
             free(p);
         }

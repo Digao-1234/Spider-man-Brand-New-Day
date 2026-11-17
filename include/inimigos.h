@@ -1,4 +1,5 @@
 #ifndef INIMIGOS_H
+
 #define INIMIGOS_H
 
 #include "raylib.h"
@@ -6,7 +7,13 @@
 #include <stdbool.h>
 
 #define LINHAS_INIMIGOS 4
+
 #define COLUNAS_INIMIGOS 9
+
+typedef enum TipoInimigo{ // Tipo do inimigo: define o sprite e o tipo de tiro
+    INIMIGO_GUARDA = 0, // Guarda da CTU: inimigo das ondas da fase 1
+    INIMIGO_NINJA = 1   // Ninja: inimigo da onda da fase 3 (antes do chefe final)
+} TipoInimigo;
 
 typedef struct Inimigo{// Estrutura que representa um inimigo
     Rectangle corpo;
@@ -16,6 +23,10 @@ typedef struct Inimigo{// Estrutura que representa um inimigo
     int coluna;
 
     int vida;
+
+    TipoInimigo tipo;
+
+    float tempoApontando; // Tempo restante (s) na pose de atirar (so o guarda usa)
     
     struct Inimigo *proximo;
 } Inimigo;
@@ -36,7 +47,7 @@ void InimigosInicializar(ListaInimigos *lista);
 
 void InimigosLimpar(ListaInimigos *lista); // Limpa a lista de inimigos, removendo todos os elementos e liberando a memória
 
-void InimigosCriarOnda(ListaInimigos *lista); // Cria uma nova onda de inimigos, preenchendo a lista com inimigos em formação
+void InimigosCriarOnda(ListaInimigos *lista, TipoInimigo tipo); // Cria uma nova onda de inimigos, preenchendo a lista com inimigos em formação
 
 void InimigosAtualizar(ListaInimigos *lista, struct ListaProjeteis *projeteis,
                        float dt, int fase, int onda); 

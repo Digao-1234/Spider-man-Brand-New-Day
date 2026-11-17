@@ -44,12 +44,13 @@ void InimigosLimpar(ListaInimigos *lista){
 
     for (int l = 0; l < LINHAS_INIMIGOS; l++){
         for (int c = 0; c < COLUNAS_INIMIGOS; c++){
-            lista->formacao[l][c] = 0;// Reinicia a formação de inimigos como vazia (0) para cada posição da matriz após limpar a lista
+            lista->formacao[l][c] = 0;
+            // Reinicia a formação de inimigos como vazia (0) para cada posição da matriz após limpar a lista
         }
     }
 }
 
-void InimigosCriarOnda(ListaInimigos *lista){
+void InimigosCriarOnda(ListaInimigos *lista, TipoInimigo tipo){
     if (lista == NULL){
          return;// Verifica se a lista é nula antes de criar uma nova onda de inimigos
     }
@@ -60,9 +61,11 @@ void InimigosCriarOnda(ListaInimigos *lista){
 
     const float espacamentoY = 43.0f;// Define o espaçamento vertical entre os inimigos na formação
 
-    const float larguraFormacao = (COLUNAS_INIMIGOS - 1) * espacamentoX + 34.0f;// Calcula a largura total da formação de inimigos com base no número de colunas e no espaçamento horizontal
+    const float larguraFormacao = (COLUNAS_INIMIGOS - 1) * espacamentoX + 34.0f;
+    // Calcula a largura total da formação de inimigos com base no número de colunas e no espaçamento horizontal
 
-    const float inicioX = (LARGURA_TELA - larguraFormacao) / 2.0f;// Calcula a posição inicial horizontal da formação de inimigos para centralizá-la na tela
+    const float inicioX = (LARGURA_TELA - larguraFormacao) / 2.0f;
+    // Calcula a posição inicial horizontal da formação de inimigos para centralizá-la na tela
 
     const float inicioY = 76.0f;// Define a posição inicial vertical da formação de inimigos na tela
 
@@ -73,13 +76,18 @@ void InimigosCriarOnda(ListaInimigos *lista){
             if (novo == NULL){
                  continue;// Verifica se a alocação de memória foi bem-sucedida antes de continuar
             }
-            novo->corpo = (Rectangle){inicioX + c * espacamentoX, inicioY + l * espacamentoY, 34.0f, 25.0f};// Define o corpo do inimigo como um retângulo com base na posição inicial e no espaçamento da formação
+            novo->corpo = (Rectangle){inicioX + c * espacamentoX, inicioY + l * espacamentoY, 34.0f, 25.0f};
+            // Define o corpo do inimigo como um retângulo com base na posição inicial e no espaçamento da formação
 
             novo->linha = l;// Define a linha do inimigo na formação
 
             novo->coluna = c;// Define a coluna do inimigo na formação
 
             novo->vida = 1;// Define a vida inicial do inimigo como 1
+
+            novo->tipo = tipo;// Define o tipo de todos os inimigos da onda (guarda ou ninja)
+
+            novo->tempoApontando = 0.0f;// Comeca na pose normal
 
             novo->proximo = lista->inicio;// Define o próximo inimigo como o início da lista atual
 
@@ -114,7 +122,8 @@ void InimigosRemover(ListaInimigos *lista, Inimigo **elo){
     Inimigo *remover = *elo;// Define um ponteiro para o inimigo a ser removido
 
     if (remover->linha >= 0 && remover->linha < LINHAS_INIMIGOS && remover->coluna >= 0 && remover->coluna < COLUNAS_INIMIGOS){
-        lista->formacao[remover->linha][remover->coluna] = 0;// Marca a posição do inimigo na formação como vazia (0) após a remoção
+        lista->formacao[remover->linha][remover->coluna] = 0;
+        // Marca a posição do inimigo na formação como vazia (0) após a remoção
     }
 
     *elo = remover->proximo;// Atualiza o ponteiro para o próximo inimigo na lista, removendo o inimigo atual da lista
@@ -139,15 +148,22 @@ bool InimigosAtingiramBase(const ListaInimigos *lista, float limiteY){
 
 void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt, int fase, int onda){
     if (lista == NULL || projeteis == NULL || lista->inicio == NULL){
-         return;// Verifica se a lista de inimigos ou a lista de projéteis é nula, ou se não há inimigos na lista antes de atualizar
+         return;
+         // Verifica se a lista de inimigos ou a lista de projéteis é nula, ou se não há inimigos na lista antes de atualizar
     }
 
-    float velocidade = 36.0f + (float)(fase - 1) * 9.0f + (float)(onda - 1) * 7.0f;// Calcula a velocidade de movimento dos inimigos com base na fase e na onda atual
+    float velocidade = 36.0f + (float)(fase - 1) * 9.0f + (float)(onda - 1) * 7.0f;
+    // Calcula a velocidade de movimento dos inimigos com base na fase e na onda atual
 
     bool atingiuBorda = false;// Inicializa uma variável para verificar se algum inimigo atingiu a borda da tela
 
     for (Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
-        i->corpo.x += (float)lista->direcao * velocidade * dt;// Atualiza a posição horizontal do inimigo com base na direção e na velocidade
+        if (i->tempoApontando > 0.0f){
+            i->tempoApontando -= dt;// Conta o tempo da pose de atirar
+        }
+
+        i->corpo.x += (float)lista->direcao * velocidade * dt;
+        // Atualiza a posição horizontal do inimigo com base na direção e na velocidade
 
         if (i->corpo.x <= 10.0f || i->corpo.x + i->corpo.width >= LARGURA_TELA - 10.0f){
             atingiuBorda = true;// Verifica se algum inimigo atingiu a borda da tela (10 pixels de margem)
@@ -160,7 +176,8 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
         for (Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
             i->corpo.y += 13.0f;// Move os inimigos para baixo em 13 pixels ao atingir a borda da tela
 
-            i->corpo.x += (float)lista->direcao * velocidade * dt;// Atualiza a posição horizontal do inimigo novamente após inverter a direção
+            i->corpo.x += (float)lista->direcao * velocidade * dt;
+            // Atualiza a posição horizontal do inimigo novamente após inverter a direção
         }
     }
 
@@ -169,9 +186,11 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
     if (lista->temporizadorDisparo <= 0.0f && lista->inicio != NULL){
         int total = InimigosContar(lista);// Conta o número total de inimigos ativos na lista antes de disparar um projétil
 
-        int indice = GetRandomValue(0, total - 1);// Gera um índice aleatório para selecionar um inimigo da lista para disparar um projétil
+        int indice = GetRandomValue(0, total - 1);
+        // Gera um índice aleatório para selecionar um inimigo da lista para disparar um projétil
 
-        Inimigo *escolhido = lista->inicio;// Define um ponteiro para percorrer a lista de inimigos e selecionar o inimigo escolhido para disparar
+        Inimigo *escolhido = lista->inicio;
+        // Define um ponteiro para percorrer a lista de inimigos e selecionar o inimigo escolhido para disparar
 
         while (indice > 0 && escolhido->proximo != NULL){
             escolhido = escolhido->proximo;// Avança para o próximo inimigo na lista até atingir o índice aleatório selecionado
@@ -182,9 +201,19 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
         Rectangle disparo = {escolhido->corpo.x + escolhido->corpo.width / 2.0f - 3.0f, escolhido->corpo.y + escolhido->corpo.height, 6.0f, 13.0f};
         // Define a posição e o tamanho do projétil disparado pelo inimigo escolhido, centralizando-o horizontalmente em relação ao corpo do inimigo
 
-        ProjeteisAdicionar(projeteis, disparo, 230.0f + fase * 12.0f, PROJETIL_INIMIGO);// Adiciona o projétil disparado pelo inimigo à lista de projéteis, com velocidade vertical baseada na fase atual
+        TipoProjetil tipoTiro = PROJETIL_INIMIGO;// O ninja atira shuriken
 
-        lista->temporizadorDisparo = (float)GetRandomValue(65, 125) / 100.0f;// Reinicia o temporizador de disparo dos inimigos com um valor aleatório entre 0.65 e 1.25 segundos
+        if (escolhido->tipo == INIMIGO_GUARDA){
+            tipoTiro = PROJETIL_GUARDA;// O guarda atira com a arma
+
+            escolhido->tempoApontando = 0.35f;// e fica um instante na pose de apontar
+        }
+
+        ProjeteisAdicionar(projeteis, disparo, 230.0f + fase * 12.0f, tipoTiro); 
+        // Adiciona o projétil disparado pelo inimigo à lista de projéteis, com velocidade vertical baseada na fase atual
+
+        lista->temporizadorDisparo = (float)GetRandomValue(65, 125) / 100.0f;
+        // Reinicia o temporizador de disparo dos inimigos com um valor aleatório entre 0.65 e 1.25 segundos
     }
 
     (void)ALTURA_TELA;// Evita o aviso de variável não utilizada, pois ALTURA_TELA não é usada diretamente nesta função
@@ -197,19 +226,30 @@ void InimigosDesenhar(const ListaInimigos *lista){
     for (const Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
         Rectangle r = i->corpo;// Define um retângulo com base no corpo do inimigo para desenhar na tela
 
-        if (SpritesDesenhar(SPR_INIMIGO, r.x + r.width / 2.0f, r.y + r.height / 2.0f, 42.0f, 0.0f, WHITE)){
+        SpriteId sprite = SPR_NINJA;// Sprite do ninja por padrao
+
+        if (i->tipo == INIMIGO_GUARDA){
+            sprite = i->tempoApontando > 0.0f ? SPR_GUARDA_APONTANDO : SPR_GUARDA;// Guarda: troca de pose quando atira
+        }
+
+        if (SpritesDesenhar(sprite, r.x + r.width / 2.0f, r.y + r.height / 2.0f, 42.0f, 0.0f, WHITE)){
             continue;// Sprite desenhado (centralizado no corpo do inimigo); passa para o proximo inimigo
         }
 
         // se o PNG nao carregou, desenha o inimigo com retangulos
-        Color cor = i->linha == 0 ? PURPLE : (i->linha == 1 ? ORANGE : GREEN);// Define a cor do inimigo com base na linha em que ele está na formação (linha 0 = roxo, linha 1 = laranja, linha 2 e 3 = verde)
+        Color cor = i->linha == 0 ? PURPLE : (i->linha == 1 ? ORANGE : GREEN);
+        // Define a cor do inimigo com base na linha em que ele está na formação (linha 0 = roxo, linha 1 = laranja, linha 2 e 3 = verde)
 
-        DrawRectangleRounded(r, 0.18f, 4, cor);// Desenha o corpo do inimigo como um retângulo arredondado com a cor definida anteriormente
+        DrawRectangleRounded(r, 0.18f, 4, cor);
+        // Desenha o corpo do inimigo como um retângulo arredondado com a cor definida anteriormente
 
-        DrawRectangle((int)r.x + 5, (int)r.y + 6, 7, 5, WHITE);// Desenha os olhos do inimigo como retângulos brancos na posição relativa ao corpo do inimigo
+        DrawRectangle((int)r.x + 5, (int)r.y + 6, 7, 5, WHITE);
+        // Desenha os olhos do inimigo como retângulos brancos na posição relativa ao corpo do inimigo
 
-        DrawRectangle((int)r.x + 22, (int)r.y + 6, 7, 5, WHITE);// Desenha os olhos do inimigo como retângulos brancos na posição relativa ao corpo do inimigo
+        DrawRectangle((int)r.x + 22, (int)r.y + 6, 7, 5, WHITE);
+        // Desenha os olhos do inimigo como retângulos brancos na posição relativa ao corpo do inimigo
 
-        DrawRectangle((int)r.x + 7, (int)r.y + 17, 20, 3, DARKGRAY);// Desenha a boca do inimigo como um retângulo escuro na posição relativa ao corpo do inimigo
+        DrawRectangle((int)r.x + 7, (int)r.y + 17, 20, 3, DARKGRAY);
+        // Desenha a boca do inimigo como um retângulo escuro na posição relativa ao corpo do inimigo
     }
 }

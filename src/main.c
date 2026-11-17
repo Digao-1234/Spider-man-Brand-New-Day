@@ -41,7 +41,8 @@ static void PartidaInicializar(Partida *partida){
 
     JogadorInicializar(&partida->jogador);// Inicializa o jogador com suas propriedades iniciais
 
-    InimigosInicializar(&partida->inimigos);// Inicializa a lista de inimigos, configurando a formação e propriedades iniciais
+    InimigosInicializar(&partida->inimigos);
+    // Inicializa a lista de inimigos, configurando a formação e propriedades iniciais
 
     ProjeteisInicializar(&partida->projeteis);
     // Inicializa a lista de projéteis, preparando-a para armazenar os projéteis disparados durante o jogo
@@ -95,7 +96,8 @@ static void SalvarRecordeSeNecessario(Partida *partida){
 static void PartidaAtualizar(Partida *partida, float dt){
     //Atualiza o estado da partida, incluindo o jogador, inimigos, projéteis, fases e verificando condições de vitória ou derrota
 
-    if (partida->estado != JOGO_EM_ANDAMENTO){// Verifica se o jogo não está em andamento, indicando que houve vitória ou derrota
+    if (partida->estado != JOGO_EM_ANDAMENTO){
+        // Verifica se o jogo não está em andamento, indicando que houve vitória ou derrota
 
         if (IsKeyPressed(KEY_ENTER)){// Verifica se a tecla ENTER foi pressionada para reiniciar a partida
             PartidaReiniciar(partida);
@@ -157,7 +159,20 @@ static void PartidaDesenhar(const Partida *partida){
     // Limpa a tela com uma cor de fundo específica, preparando-a para desenhar os elementos visuais da partida
 
     
-    for (int i = 0; i < 70; i++){
+    // Cenario da fase atual (SPR_FUNDO_FASE1..3). Se o PNG nao carregou, volta ao fundo de estrelas.
+    int fundo = partida->fases.faseAtual;
+
+    bool temFundo = fundo >= 1 && fundo <= 3 &&
+                    SpritesDesenhar((SpriteId)(SPR_FUNDO_FASE1 + (fundo - 1)), 0.0f, 0.0f, (float)ALTURA_TELA, 0.0f, WHITE);
+
+    if (temFundo){
+        // Faixas escuras suaves no topo e na base: o texto do HUD continua legivel sobre o cenario
+        DrawRectangleGradientV(0, 0, LARGURA_TELA, 120, (Color){ 0, 0, 0, 170 }, (Color){ 0, 0, 0, 0 });
+
+        DrawRectangleGradientV(0, ALTURA_TELA - 60, LARGURA_TELA, 60, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 170 });
+    }
+
+    for (int i = 0; i < 70 && !temFundo; i++){
         // Desenha 70 pixels aleatórios no fundo da tela, criando um efeito visual de estrelas ou partículas no espaço
         int x = (i * 137 + 29) % LARGURA_TELA;
 
@@ -199,6 +214,10 @@ static void PartidaDesenhar(const Partida *partida){
     if (partida->fases.faseAtual == 1 && !partida->fases.chefe.ativo && InimigosContar(&partida->inimigos) > 0){
         DrawText(TextFormat("ONDA %d/2", partida->fases.ondaFaseUm), 805, 52, 18, LIGHTGRAY);
         //Desenha a informação da onda atual da fase 1 na tela, informando ao jogador em qual onda ele está jogando e quantas ondas ainda restam para completar a fase
+    }
+
+    if (partida->fases.faseAtual == 3 && !partida->fases.chefe.ativo && InimigosContar(&partida->inimigos) > 0){
+        DrawText("ONDA 1/1", 805, 52, 18, LIGHTGRAY);// Fase 3: uma unica onda de ninjas antes do chefe final
     }
 
     DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Sair: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);

@@ -77,13 +77,15 @@ static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *p
     if (numero == 1){// Se o número da fase for 1, define a onda da fase 1 como 1 e cria uma nova onda de inimigos
         fases->ondaFaseUm = 1;
 
-        InimigosCriarOnda(inimigos);
+        InimigosCriarOnda(inimigos, INIMIGO_GUARDA);
     } 
     else if (numero == 2){// Se o número da fase for 2, cria um chefe do tipo 2 (miniboss)
         ChefeCriar(fases, 2);
     } 
-    else{// Se o número da fase for 3, cria um chefe do tipo 3 (chefe final)
-        ChefeCriar(fases, 3);
+    else{// Se o número da fase for 3, cria uma onda de ninjas (o chefe final aparece quando todos forem eliminados)
+        fases->ondaFaseUm = 1;// A velocidade da onda usa a fase 3 e a onda 1 (nao depende de como terminou a fase 1)
+
+        InimigosCriarOnda(inimigos, INIMIGO_NINJA);// Onda de ninjas antes do chefe final
     }
 }
 
@@ -95,13 +97,17 @@ void FasesInicializar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *pro
 
     fases->ondaFaseUm = 1;// Define a onda da fase 1 como 1, indicando que a primeira onda de inimigos será criada na fase 1
 
-    fases->chefe = (Chefe){0};// Inicializa a estrutura do chefe da fase com valores padrão (zeros), indicando que não há chefe ativo no momento
+    fases->chefe = (Chefe){0};
+    // Inicializa a estrutura do chefe da fase com valores padrão (zeros), indicando que não há chefe ativo no momento
 
-    InimigosInicializar(inimigos);// Inicializa a lista de inimigos, definindo o ponteiro de início como NULL, a direção como 1 (para a direita), o temporizador de disparo como 0.8 segundos, e preenchendo a formação de inimigos com zeros (vazia)
+    InimigosInicializar(inimigos);
+    // Inicializa a lista de inimigos, definindo o ponteiro de início como NULL, a direção como 1 (para a direita), o temporizador de disparo como 0.8 segundos, e preenchendo a formação de inimigos com zeros (vazia)
 
-    ProjeteisInicializar(projeteis);// Inicializa a lista de projéteis, definindo o ponteiro de início como NULL, indicando que não há projéteis ativos no momento
+    ProjeteisInicializar(projeteis);
+    // Inicializa a lista de projéteis, definindo o ponteiro de início como NULL, indicando que não há projéteis ativos no momento
 
-    InimigosCriarOnda(inimigos);// Cria a primeira onda de inimigos na fase 1, preenchendo a lista de inimigos com inimigos em formação
+    InimigosCriarOnda(inimigos, INIMIGO_GUARDA);
+    // Cria a primeira onda de inimigos na fase 1, preenchendo a lista de inimigos com inimigos em formação
 }
 
 void FasesReiniciar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *projeteis){
@@ -124,12 +130,19 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
             if (fases->ondaFaseUm == 1){// Se a onda da fase 1 for 1, define a onda da fase 1 como 2 e cria uma nova onda de inimigos
                 fases->ondaFaseUm = 2;// Avança para a segunda onda da fase 1
 
-                InimigosCriarOnda(inimigos);// Cria a segunda onda de inimigos na fase 1
+                InimigosCriarOnda(inimigos, INIMIGO_GUARDA);// Cria a segunda onda de inimigos na fase 1
 
             }
             else {// Se a onda da fase 1 for 2, cria o chefe da fase 1 (tipo 1) e marca o chefe como ativo
                 ChefeCriar(fases, 1);
             }
+        }
+    }
+
+    if (fases->faseAtual == 3 && !fases->chefe.ativo && fases->chefe.tipo == 0){
+        // Fase 3: quando todos os ninjas da onda forem eliminados, o chefe final (tipo 3) aparece
+        if (InimigosContar(inimigos) == 0){
+            ChefeCriar(fases, 3);
         }
     }
 
@@ -169,15 +182,20 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
                 float centroChefe = c->corpo.x + c->corpo.width / 2.0f;
 
-                Rectangle tiroEsq = {centroChefe - espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Tiro lateral esquerdo
+                Rectangle tiroEsq = {centroChefe - espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};
+                // Tiro lateral esquerdo
 
-                Rectangle tiroDir = {centroChefe + espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Tiro lateral direito
+                Rectangle tiroDir = {centroChefe + espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};
+                // Tiro lateral direito
 
-                ProjeteisAdicionar(projeteis, tiroEsq, 250.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo lado esquerdo do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+                ProjeteisAdicionar(projeteis, tiroEsq, 250.0f, TipoTiroDoChefe(c->tipo));
+                // Adiciona o projétil disparado pelo lado esquerdo do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
 
-                ProjeteisAdicionar(projeteis, tiroDir, 250.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+                ProjeteisAdicionar(projeteis, tiroDir, 250.0f, TipoTiroDoChefe(c->tipo));
+                // Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
             }
-            c->intervaloDisparo = c->tipo == 3 ? 0.52f : 0.9f;// Reinicia o intervalo de disparo do chefe com base no tipo do chefe (quanto maior o tipo, menor o intervalo de disparo)
+            c->intervaloDisparo = c->tipo == 3 ? 0.52f : 0.9f;
+            // Reinicia o intervalo de disparo do chefe com base no tipo do chefe (quanto maior o tipo, menor o intervalo de disparo)
         }
     } 
     else if (fases->chefe.tipo == 1 && fases->chefe.vida == 0){// Se o tipo do chefe for 1 (chefe da fase 1) e sua vida for 0, inicia a fase 2 com o miniboss (tipo 2)
@@ -195,35 +213,46 @@ void FasesDesenhar(const Fases *fases){
     if (fases == NULL || !fases->chefe.ativo){// Verifica se o ponteiro de fases é nulo ou se o chefe não está ativo antes de desenhar o chefe da fase
          return;
     }
-    const Chefe *c = &fases->chefe;// Define um ponteiro constante para o chefe da fase atual, permitindo acessar suas propriedades sem modificá-las
+    const Chefe *c = &fases->chefe;
+    // Define um ponteiro constante para o chefe da fase atual, permitindo acessar suas propriedades sem modificá-las
 
-    Color cor = c->tipo == 1 ? MAROON : (c->tipo == 2 ? PURPLE : DARKPURPLE);// Define a cor do chefe com base no tipo do chefe (tipo 1 = marrom, tipo 2 = roxo, tipo 3 = roxo escuro)
+    Color cor = c->tipo == 1 ? MAROON : (c->tipo == 2 ? PURPLE : DARKPURPLE);
+    // Define a cor do chefe com base no tipo do chefe (tipo 1 = marrom, tipo 2 = roxo, tipo 3 = roxo escuro)
 
     SpriteId sprite = (SpriteId)(SPR_BOSS1 + (c->tipo - 1));// SPR_BOSS1, SPR_BOSS2 e SPR_BOSS3 estao em sequencia no enum
 
     if (!SpritesDesenhar(sprite, c->corpo.x + c->corpo.width / 2.0f, c->corpo.y + c->corpo.height / 2.0f, c->corpo.height, 0.0f, WHITE)){
+
         //se o PNG nao carregou, desenha o chefe com retangulos como antes
         DrawRectangleRounded(c->corpo, 0.16f, 8, cor);// Desenha o corpo do chefe como um retângulo arredondado com a cor definida anteriormente
 
-        DrawRectangle((int)c->corpo.x + 22, (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe (como uma "boca" ou "visor") como um retângulo branco na posição relativa ao corpo do chefe
+        DrawRectangle((int)c->corpo.x + 22, (int)c->corpo.y + 18, 35, 12, WHITE);
+        // Desenha a parte frontal do chefe (como uma "boca" ou "visor") como um retângulo branco na posição relativa ao corpo do chefe
 
-        DrawRectangle((int)(c->corpo.x + c->corpo.width - 57), (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe como um retângulo branco na posição relativa ao corpo do chefe, mas no lado oposto
+        DrawRectangle((int)(c->corpo.x + c->corpo.width - 57), (int)c->corpo.y + 18, 35, 12, WHITE);
+        // Desenha a parte frontal do chefe como um retângulo branco na posição relativa ao corpo do chefe, mas no lado oposto
     }
 
-    const char *nome = c->tipo == 1 ? "Escorpião" : (c->tipo == 2 ? "Hulk" : "Jean Grey");// Define o nome do chefe com base no tipo do chefe (tipo 1 = "Escorpião", tipo 2 = "Hulk", tipo 3 = "Jean Grey")
+    const char *nome = c->tipo == 1 ? "Escorpião" : (c->tipo == 2 ? "Hulk" : "Jean Grey");
+    // Define o nome do chefe com base no tipo do chefe (tipo 1 = "Escorpião", tipo 2 = "Hulk", tipo 3 = "Jean Grey")
 
-    DrawText(nome, LARGURA_TELA / 2 - 60, 18, 20, RAYWHITE);// Desenha o nome do chefe na tela, centralizado horizontalmente e posicionado verticalmente a 18 pixels do topo da tela, com tamanho de fonte 20 e cor branca
+    DrawText(nome, LARGURA_TELA / 2 - 60, 18, 20, RAYWHITE);
+    // Desenha o nome do chefe na tela, centralizado horizontalmente e posicionado verticalmente a 18 pixels do topo da tela, com tamanho de fonte 20 e cor branca
 
     const float largura = 300.0f;// Define a largura da barra de vida do chefe como 300 pixels
 
-    float fracao = c->vidaMaxima > 0 ? (float)c->vida / (float)c->vidaMaxima : 0.0f;// Calcula a fração da vida atual do chefe em relação à vida máxima, garantindo que não haja divisão por zero (se a vida máxima for maior que 0, calcula a fração; caso contrário, define como 0.0f)
+    float fracao = c->vidaMaxima > 0 ? (float)c->vida / (float)c->vidaMaxima : 0.0f;
+    // Calcula a fração da vida atual do chefe em relação à vida máxima, garantindo que não haja divisão por zero (se a vida máxima for maior que 0, calcula a fração; caso contrário, define como 0.0f)
 
     if (fracao < 0.0f){// Garante que a fração da vida não seja negativa, caso a vida atual do chefe seja menor que 0
          fracao = 0.0f;
     }
-    DrawRectangle((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)largura, 12, DARKGRAY);// Desenha a barra de fundo da vida do chefe como um retângulo cinza escuro, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura definida anteriormente e altura de 12 pixels
+    DrawRectangle((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)largura, 12, DARKGRAY);
+    // Desenha a barra de fundo da vida do chefe como um retângulo cinza escuro, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura definida anteriormente e altura de 12 pixels
 
-    DrawRectangle((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)(largura * fracao), 12, RED);// Desenha a barra de vida atual do chefe como um retângulo vermelho, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura proporcional à fração da vida atual em relação à vida máxima e altura de 12 pixels
+    DrawRectangle((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)(largura * fracao), 12, RED);
+    // Desenha a barra de vida atual do chefe como um retângulo vermelho, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura proporcional à fração da vida atual em relação à vida máxima e altura de 12 pixels
 
-    DrawRectangleLines((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)largura, 12, RAYWHITE);// Desenha a borda da barra de vida do chefe como um retângulo branco, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura definida anteriormente e altura de 12 pixels
+    DrawRectangleLines((int)(LARGURA_TELA / 2 - largura / 2), 43, (int)largura, 12, RAYWHITE);
+    // Desenha a borda da barra de vida do chefe como um retângulo branco, centralizado horizontalmente na tela e posicionado verticalmente a 43 pixels do topo da tela, com largura definida anteriormente e altura de 12 pixels
 }

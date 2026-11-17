@@ -38,21 +38,21 @@ static void ChefeCriar(Fases *fases, int tipo){// Cria um chefe da fase com base
     if (tipo == 1){// Se o tipo do chefe for 1 (chefe da fase 1), define suas propriedades específicas
         c->corpo = (Rectangle){390.0f, 64.0f, 180.0f, 150.0f};
 
-        c->vidaMaxima = 22;
+        c->vidaMaxima = 35;
 
         c->velocidade = 110.0f;
     } 
     else if (tipo == 2){// Se o tipo do chefe for 2 (miniboss), define suas propriedades específicas
         c->corpo = (Rectangle){385.0f, 64.0f, 190.0f, 160.0f};
 
-        c->vidaMaxima = 35;
+        c->vidaMaxima = 50;
 
         c->velocidade = 150.0f;
     } 
     else{// Se o tipo do chefe for 3 (chefe final), define suas propriedades específicas
         c->corpo = (Rectangle){385.0f, 64.0f, 190.0f, 170.0f};
 
-        c->vidaMaxima = 52;
+        c->vidaMaxima = 75;
 
         c->velocidade = 185.0f;
     }

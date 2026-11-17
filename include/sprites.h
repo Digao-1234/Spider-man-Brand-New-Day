@@ -19,6 +19,10 @@ typedef enum{ // Identificador de cada sprite do jogo
     SPR_TIRO_BOSS1,
     SPR_TIRO_BOSS2,
     SPR_TIRO_BOSS3,
+    SPR_GUARDA, // Guarda da CTU parado
+    SPR_GUARDA_MIRANDO, // Guarda levantando a arma
+    SPR_GUARDA_FRENTE, // Guarda apontando a arma para o jogador (logo depois de atirar)
+    SPR_TIRO_GUARDA, // Tiro de energia do guarda
     SPR_TOTAL
 } SpriteId;
 
@@ -28,4 +32,7 @@ void SpritesDescarregar(void); // Libera as texturas.
 
 bool SpritesDesenhar(SpriteId id, float x, float y, float altura, float rotacao, Color tint);
 // Desenha o sprite especificado na posição (x, y) com a altura e rotação especificadas, aplicando a cor de tintura.
+bool SpritesDesenharFundo(int fase, float rolagem);
+// Desenha o fundo da fase (1 a 3) rolando na vertical. Retorna false se o PNG nao carregou (quem chamou desenha outro fundo).
+
 #endif

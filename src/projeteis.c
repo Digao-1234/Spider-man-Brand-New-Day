@@ -118,6 +118,13 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
             }
         } 
 
+        else if (p->tipo == PROJETIL_GUARDA){
+            if (!SpritesDesenhar(SPR_TIRO_GUARDA, cx, cy, 30.0f, 180.0f, WHITE)){// 180 graus: a ponta da chama aponta para baixo
+                // Se o sprite do tiro do guarda nao estiver disponivel, desenha um retangulo laranja como fallback
+                DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);
+            }
+        }
+
         else{ // Tiros dos chefes (PROJETIL_BOSS1, 2 e 3): cada chefe tem o seu sprite
             SpriteId sprite = p->tipo == PROJETIL_BOSS1 ? SPR_TIRO_BOSS1 : (p->tipo == PROJETIL_BOSS2 ? SPR_TIRO_BOSS2 : SPR_TIRO_BOSS3);
 

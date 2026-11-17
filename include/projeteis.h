@@ -11,7 +11,8 @@ typedef enum TipoProjetil{
     PROJETIL_INIMIGO = 1,
     PROJETIL_BOSS1 = 2, // Tiros dos chefes: machucam o jogador, so o desenho muda
     PROJETIL_BOSS2 = 3,
-    PROJETIL_BOSS3 = 4
+    PROJETIL_BOSS3 = 4,
+    PROJETIL_GUARDA = 5 // Tiro de energia dos guardas da CTU
 } TipoProjetil;
 
 typedef struct Projetil{

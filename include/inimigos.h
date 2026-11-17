@@ -8,6 +8,8 @@
 #define LINHAS_INIMIGOS 4
 #define COLUNAS_INIMIGOS 9
 
+#define PRIMEIRA_LINHA_GUARDA 2 // Da linha 2 em diante os inimigos sao guardas da CTU (linhas 0 e 1 continuam ninjas). Use LINHAS_INIMIGOS para so ter ninjas.
+
 typedef struct Inimigo{// Estrutura que representa um inimigo
     Rectangle corpo;
 
@@ -16,6 +18,8 @@ typedef struct Inimigo{// Estrutura que representa um inimigo
     int coluna;
 
     int vida;
+
+    float tempoMirando; // Segundos restantes da pose de tiro do guarda (so muda o desenho)
     
     struct Inimigo *proximo;
 } Inimigo;

@@ -14,9 +14,16 @@
 
 #include "sprites.h"
 
+#include "menu.h"
+
 #include <stdbool.h>
 
 #include <time.h>
+
+typedef enum{ // Qual tela esta sendo mostrada
+    TELA_MENU = 0,
+    TELA_JOGO = 1
+} Tela;
 
 typedef struct Partida{
     Jogador jogador;
@@ -150,20 +157,22 @@ static void PartidaAtualizar(Partida *partida, float dt){
     }
 }
 
-static void PartidaDesenhar(const Partida *partida){
+static void PartidaDesenhar(const Partida *partida, float rolagem){
     // Desenha os elementos visuais da partida, incluindo o fundo, informações do jogo, inimigos, fases, projéteis e jogador, além de mensagens de pausa e fim de jogo
 
     ClearBackground((Color){ 8, 12, 29, 255 });
     // Limpa a tela com uma cor de fundo específica, preparando-a para desenhar os elementos visuais da partida
 
     
-    for (int i = 0; i < 70; i++){
-        // Desenha 70 pixels aleatórios no fundo da tela, criando um efeito visual de estrelas ou partículas no espaço
-        int x = (i * 137 + 29) % LARGURA_TELA;
+    if (!SpritesDesenharFundo(partida->fases.faseAtual, rolagem)){
+        // Sem o PNG do fundo da fase, desenha as estrelas como antes
+        for (int i = 0; i < 70; i++){
+            int x = (i * 137 + 29) % LARGURA_TELA;
 
-        int y = (i * 83 + 17) % ALTURA_TELA;
+            int y = (i * 83 + 17) % ALTURA_TELA;
 
-        DrawPixel(x, y, (Color){ 72, 85, 125, 255 });// Desenha um pixel na posição (x, y) com uma cor específica, representando uma estrela ou partícula no fundo da tela
+            DrawPixel(x, y, (Color){ 72, 85, 125, 255 });
+        }
     }
 
     DrawText("HOMEM-ARANHA: UM NOVO DIA", 20, 16, 23, RAYWHITE);
@@ -201,7 +210,7 @@ static void PartidaDesenhar(const Partida *partida){
         //Desenha a informação da onda atual da fase 1 na tela, informando ao jogador em qual onda ele está jogando e quantas ondas ainda restam para completar a fase
     }
 
-    DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Sair: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);
+    DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Menu: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);
     // Desenha as instruções de controle do jogo na tela, informando ao jogador como mover, disparar, pausar e sair do jogo
 
     if (partida->pausado && partida->estado == JOGO_EM_ANDAMENTO){
@@ -212,6 +221,8 @@ static void PartidaDesenhar(const Partida *partida){
         // Desenha a mensagem "PAUSADO" na tela, indicando ao jogador que o jogo está atualmente pausado
 
         DrawText("Pressione P para continuar", LARGURA_TELA / 2 - 130, 320, 18, LIGHTGRAY);
+
+        DrawText("ESC para voltar ao menu", LARGURA_TELA / 2 - 105, 350, 18, LIGHTGRAY);
         // Desenha a instrução para retomar o jogo na tela, informando ao jogador que ele pode pressionar a tecla P para continuar jogando
     }
 
@@ -234,6 +245,8 @@ static void PartidaDesenhar(const Partida *partida){
         // Desenha a pontuação final do jogador na tela
 
         DrawText("Pressione ENTER para jogar novamente", LARGURA_TELA / 2 - 190, 380, 18, LIGHTGRAY);
+
+        DrawText("ESC para voltar ao menu", LARGURA_TELA / 2 - 105, 410, 18, LIGHTGRAY);
         // Desenha a instrução para reiniciar o jogo na tela, informando ao jogador que ele pode pressionar a tecla ENTER para jogar novamente
     }
 }
@@ -244,6 +257,9 @@ int main(void){
 
     InitWindow(LARGURA_TELA, ALTURA_TELA, "Homem-Aranha: Um Novo Dia");
     // Inicializa a janela do jogo com as dimensões especificadas e o título "Homem-Aranha: Um Novo Dia"
+
+    SetExitKey(KEY_NULL);
+    // Tira o ESC como tecla de saida da Raylib: agora o ESC volta para o menu (e so sai pelo menu)
 
     SetTargetFPS(60);
     // Define a taxa de quadros alvo para o jogo como 60 quadros por segundo
@@ -258,18 +274,57 @@ int main(void){
 
     PartidaInicializar(&partida);// Inicializa a partida, configurando o jogador, inimigos, projéteis, fases e estado do jogo
 
-    while (!WindowShouldClose()){// Loop principal do jogo, que continua enquanto a janela não for fechada
+    Menu menu;
+
+    MenuInicializar(&menu);
+
+    Tela tela = TELA_MENU;// O jogo abre no menu
+
+    float rolagem = 0.0f;// Quanto o fundo ja rolou (em pixels)
+
+    bool sair = false;
+
+    while (!sair && !WindowShouldClose()){// Loop principal do jogo, que continua ate o jogador sair pelo menu ou fechar a janela
 
         float dt = GetFrameTime();
-        // Obtém o tempo delta (dt) desde o último quadro, representando o tempo decorrido entre as atualizações do jogo
 
-        PartidaAtualizar(&partida, dt);
-        // Atualiza o estado da partida, incluindo o jogador, inimigos, projéteis, fases e verificando condições de vitória ou derrota com base no tempo delta (dt)
+        if (tela == TELA_MENU){
+            rolagem += 30.0f * dt;
 
-        BeginDrawing();// Inicia o processo de desenho na tela, preparando-a para desenhar os elementos visuais da partida
+            AcaoMenu acao = MenuAtualizar(&menu);
 
-        PartidaDesenhar(&partida);
-        // Desenha os elementos visuais da partida, incluindo o fundo, informações do jogo, inimigos, fases, projéteis e jogador, além de mensagens de pausa e fim de jogo
+            if (acao == MENU_JOGAR){
+                PartidaReiniciar(&partida);// Comeca uma partida nova (fase 1, 3 vidas, pontuacao zerada)
+
+                tela = TELA_JOGO;
+            }
+            else if (acao == MENU_SAIR){
+                sair = true;
+            }
+        }
+        else{
+            if (IsKeyPressed(KEY_ESCAPE)){
+                SalvarRecordeSeNecessario(&partida);// Guarda o recorde da partida em curso antes de sair dela
+
+                tela = TELA_MENU;
+            }
+            else{
+                PartidaAtualizar(&partida, dt);
+
+                if (partida.estado == JOGO_EM_ANDAMENTO && !partida.pausado){
+                    rolagem += 45.0f * dt;// O fundo so rola enquanto a partida esta rodando
+                }
+            }
+        }
+
+        BeginDrawing();// Inicia o processo de desenho na tela
+
+        if (tela == TELA_MENU){
+            MenuDesenhar(&menu, partida.recorde, rolagem);
+        }
+        else{
+            PartidaDesenhar(&partida, rolagem);
+        }
 
         EndDrawing();// Finaliza o processo de desenho na tela, exibindo os elementos visuais desenhados durante o quadro atual
     }

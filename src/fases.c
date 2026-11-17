@@ -6,10 +6,25 @@
 
 #include "config.h"
 
+#include "sprites.h"
+
 #include <stddef.h>
 
 
+static TipoProjetil TipoTiroDoChefe(int tipo){// Cada chefe dispara o seu proprio tipo de projetil (muda so o visual)
+    if (tipo == 1){
+         return PROJETIL_BOSS1;// Tiros do chefe da fase 1 (Escorpião)
+    }
+    else if (tipo == 2){
+         return PROJETIL_BOSS2;// Tiros do miniboss (Hulk)
+    }
+    else{
+         return PROJETIL_BOSS3;
+    }
+}
+
 static void ChefeCriar(Fases *fases, int tipo){// Cria um chefe da fase com base no tipo especificado (1, 2 ou 3) e inicializa suas propriedades
+
     Chefe *c = &fases->chefe;// Define um ponteiro para o chefe da fase atual
 
     c->ativo = true;// Marca o chefe como ativo, indicando que ele está presente na fase
@@ -21,21 +36,21 @@ static void ChefeCriar(Fases *fases, int tipo){// Cria um chefe da fase com base
     c->intervaloDisparo = 0.85f;// Define o intervalo de disparo inicial do chefe como 0.85 segundos
 
     if (tipo == 1){// Se o tipo do chefe for 1 (chefe da fase 1), define suas propriedades específicas
-        c->corpo = (Rectangle){360.0f, 82.0f, 240.0f, 78.0f};
+        c->corpo = (Rectangle){390.0f, 64.0f, 180.0f, 150.0f};
 
         c->vidaMaxima = 22;
 
         c->velocidade = 110.0f;
     } 
     else if (tipo == 2){// Se o tipo do chefe for 2 (miniboss), define suas propriedades específicas
-        c->corpo = (Rectangle){385.0f, 80.0f, 190.0f, 72.0f};
+        c->corpo = (Rectangle){385.0f, 64.0f, 190.0f, 160.0f};
 
-        c->vidaMaxima = 28;
+        c->vidaMaxima = 35;
 
         c->velocidade = 150.0f;
     } 
     else{// Se o tipo do chefe for 3 (chefe final), define suas propriedades específicas
-        c->corpo = (Rectangle){325.0f, 65.0f, 310.0f, 100.0f};
+        c->corpo = (Rectangle){385.0f, 64.0f, 190.0f, 170.0f};
 
         c->vidaMaxima = 52;
 
@@ -103,6 +118,7 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
     if (fases->faseAtual == 1 && !fases->chefe.ativo && fases->chefe.tipo == 0){
 // Se a fase atual for 1, o chefe não estiver ativo e o tipo do chefe for 0 (não definido), verifica se todos os inimigos foram eliminados para avançar para a próxima onda ou criar o chefe da fase
+
         if (InimigosContar(inimigos) == 0){// Se não houver inimigos ativos na lista, verifica se é necessário avançar para a próxima onda ou criar o chefe da fase
 
             if (fases->ondaFaseUm == 1){// Se a onda da fase 1 for 1, define a onda da fase 1 como 2 e cria uma nova onda de inimigos
@@ -118,19 +134,23 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
     }
 
     //Movimento e ataques de chefes.
+
     if (fases->chefe.ativo){// Se o chefe estiver ativo, atualiza sua posição, verifica colisões com as bordas da tela e gerencia seus ataques
+
         Chefe *c = &fases->chefe;// Define um ponteiro para o chefe da fase atual
 
         c->corpo.x += (float)c->direcao * c->velocidade * dt;// Atualiza a posição horizontal do chefe com base na direção e na velocidade, multiplicando pelo delta de tempo (dt) para garantir movimento suave e consistente
 
         if (c->corpo.x < 10.0f){
         // Se a posição horizontal do chefe for menor que 10.0f (atingiu a borda esquerda da tela), ajusta sua posição para 10.0f e inverte a direção para a direita
+
             c->corpo.x = 10.0f;// Ajusta a posição horizontal do chefe para 10.0f, garantindo que ele não ultrapasse a borda esquerda da tela
 
             c->direcao = 1;// Inverte a direção do chefe para a direita (1), permitindo que ele se mova de volta para dentro da tela
         }
         if (c->corpo.x + c->corpo.width > LARGURA_TELA - 10.0f){
     // Se a posição horizontal do chefe mais sua largura for maior que LARGURA_TELA - 10.0f (atingiu a borda direita da tela), ajusta sua posição para a borda direita e inverte a direção para a esquerda
+
             c->corpo.x = LARGURA_TELA - 10.0f - c->corpo.width;// Ajusta a posição horizontal do chefe para a borda direita da tela, garantindo que ele não ultrapasse a borda direita
 
             c->direcao = -1;// Inverte a direção do chefe para a esquerda (-1), permitindo que ele se mova de volta para dentro da tela
@@ -139,18 +159,23 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
         c->intervaloDisparo -= dt;// Reduz o intervalo de disparo do chefe com base no delta de tempo (dt), permitindo que ele dispare projéteis em intervalos regulares
 
         if (c->intervaloDisparo <= 0.0f){// Se o intervalo de disparo do chefe for menor ou igual a 0.0f, significa que ele está pronto para disparar projéteis
+
             Rectangle tiro = {c->corpo.x + c->corpo.width / 2.0f - 4.0f, c->corpo.y + c->corpo.height, 8.0f, 16.0f};// Define a posição e o tamanho do projétil que o chefe irá disparar, centralizando-o horizontalmente em relação ao corpo do chefe e posicionando-o logo abaixo do corpo
 
-            ProjeteisAdicionar(projeteis, tiro, 260.0f + c->tipo * 25.0f, PROJETIL_INIMIGO);// Adiciona o projétil disparado pelo chefe à lista de projéteis, com velocidade vertical baseada no tipo do chefe (quanto maior o tipo, maior a velocidade do projétil)
+            ProjeteisAdicionar(projeteis, tiro, 260.0f + c->tipo * 25.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo chefe à lista de projéteis, com velocidade vertical baseada no tipo do chefe (quanto maior o tipo, maior a velocidade do projétil)
 
             if (c->tipo >= 2){// Se o tipo do chefe for 2 ou maior (miniboss ou chefe final), dispara projéteis adicionais em posições laterais para aumentar a dificuldade do ataque
-                Rectangle tiroEsq = {c->corpo.x + 22.0f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Define a posição e o tamanho do projétil disparado pelo lado esquerdo do chefe, posicionando-o próximo à borda esquerda do corpo do chefe
+                float espalha = c->tipo == 3 ? 130.0f : 70.0f;// Distancia dos tiros laterais ate o centro do chefe (a mesma de antes)
 
-                Rectangle tiroDir = {c->corpo.x + c->corpo.width - 29.0f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Define a posição e o tamanho do projétil disparado pelo lado direito do chefe, posicionando-o próximo à borda direita do corpo do chefe
+                float centroChefe = c->corpo.x + c->corpo.width / 2.0f;
 
-                ProjeteisAdicionar(projeteis, tiroEsq, 250.0f, PROJETIL_INIMIGO);// Adiciona o projétil disparado pelo lado esquerdo do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+                Rectangle tiroEsq = {centroChefe - espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Tiro lateral esquerdo
 
-                ProjeteisAdicionar(projeteis, tiroDir, 250.0f, PROJETIL_INIMIGO);// Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+                Rectangle tiroDir = {centroChefe + espalha - 3.5f, c->corpo.y + c->corpo.height, 7.0f, 14.0f};// Tiro lateral direito
+
+                ProjeteisAdicionar(projeteis, tiroEsq, 250.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo lado esquerdo do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+
+                ProjeteisAdicionar(projeteis, tiroDir, 250.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
             }
             c->intervaloDisparo = c->tipo == 3 ? 0.52f : 0.9f;// Reinicia o intervalo de disparo do chefe com base no tipo do chefe (quanto maior o tipo, menor o intervalo de disparo)
         }
@@ -174,13 +199,18 @@ void FasesDesenhar(const Fases *fases){
 
     Color cor = c->tipo == 1 ? MAROON : (c->tipo == 2 ? PURPLE : DARKPURPLE);// Define a cor do chefe com base no tipo do chefe (tipo 1 = marrom, tipo 2 = roxo, tipo 3 = roxo escuro)
 
-    DrawRectangleRounded(c->corpo, 0.16f, 8, cor);// Desenha o corpo do chefe como um retângulo arredondado com a cor definida anteriormente
+    SpriteId sprite = (SpriteId)(SPR_BOSS1 + (c->tipo - 1));// SPR_BOSS1, SPR_BOSS2 e SPR_BOSS3 estao em sequencia no enum
 
-    DrawRectangle((int)c->corpo.x + 22, (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe (como uma "boca" ou "visor") como um retângulo branco na posição relativa ao corpo do chefe
+    if (!SpritesDesenhar(sprite, c->corpo.x + c->corpo.width / 2.0f, c->corpo.y + c->corpo.height / 2.0f, c->corpo.height, 0.0f, WHITE)){
+        //se o PNG nao carregou, desenha o chefe com retangulos como antes
+        DrawRectangleRounded(c->corpo, 0.16f, 8, cor);// Desenha o corpo do chefe como um retângulo arredondado com a cor definida anteriormente
 
-    DrawRectangle((int)(c->corpo.x + c->corpo.width - 57), (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe como um retângulo branco na posição relativa ao corpo do chefe, mas no lado oposto
+        DrawRectangle((int)c->corpo.x + 22, (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe (como uma "boca" ou "visor") como um retângulo branco na posição relativa ao corpo do chefe
 
-    const char *nome = c->tipo == 1 ? "Escorpião" : (c->tipo == 2 ? "Hulk" : "CHEFE FINAL");// Define o nome do chefe com base no tipo do chefe (tipo 1 = "Escorpião", tipo 2 = "Hulk", tipo 3 = "CHEFE FINAL")
+        DrawRectangle((int)(c->corpo.x + c->corpo.width - 57), (int)c->corpo.y + 18, 35, 12, WHITE);// Desenha a parte frontal do chefe como um retângulo branco na posição relativa ao corpo do chefe, mas no lado oposto
+    }
+
+    const char *nome = c->tipo == 1 ? "Escorpião" : (c->tipo == 2 ? "Hulk" : "Jean Grey");// Define o nome do chefe com base no tipo do chefe (tipo 1 = "Escorpião", tipo 2 = "Hulk", tipo 3 = "Jean Grey")
 
     DrawText(nome, LARGURA_TELA / 2 - 60, 18, 20, RAYWHITE);// Desenha o nome do chefe na tela, centralizado horizontalmente e posicionado verticalmente a 18 pixels do topo da tela, com tamanho de fonte 20 e cor branca
 

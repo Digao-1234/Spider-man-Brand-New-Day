@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "sprites.h"
+
 #include <stdlib.h>
 
 
@@ -78,7 +80,7 @@ void ProjeteisAtualizar(ListaProjeteis *lista, float dt){
             // Se o projétil estiver fora da tela, remove-o da lista e libera a memória
             *elo = p->proximo;
 
-            free(p);
+            free(p);// Libera a memória do projétil removido
         } 
 
         else{
@@ -93,15 +95,38 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
     }
 
     for (const Projetil *p = lista->inicio; p != NULL; p = p->proximo){
-        if (p->tipo == PROJETIL_TEIA){
-            DrawRectangleRounded(p->corpo, 0.45f, 4, SKYBLUE);// Desenha o projétil de teia com arredondamento e cor azul
+        float cx = p->corpo.x + p->corpo.width / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
 
-            DrawRectangle((int)p->corpo.x + 2, (int)p->corpo.y, 2, (int)p->corpo.height, WHITE);
-            // Desenha uma linha branca no centro do projétil de teia para dar efeito visual
+        float cy = p->corpo.y + p->corpo.height / 2.0f;// Centro do projetil: o sprite e desenhado em volta desse ponto
+
+        if (p->tipo == PROJETIL_TEIA){
+            if (!SpritesDesenhar(SPR_TEIA, cx, cy, 34.0f, 0.0f, WHITE)){
+                // Se o sprite da teia não estiver disponível, desenha um retângulo azul como fallback
+                DrawRectangleRounded(p->corpo, 0.45f, 4, SKYBLUE);
+
+                DrawRectangle((int)p->corpo.x + 2, (int)p->corpo.y, 2, (int)p->corpo.height, WHITE);
+                // Desenha uma linha branca no centro do projétil de teia para dar efeito visual
+            }
         } 
 
-        else{
-            DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);// Desenha o projétil inimigo com arredondamento e cor laranja
+        else if (p->tipo == PROJETIL_INIMIGO){
+            float giro = (float)GetTime() * 720.0f;// O shuriken gira 2 voltas por segundo
+
+            if (!SpritesDesenhar(SPR_TIRO_INIMIGO, cx, cy, 20.0f, giro, WHITE)){
+                // Se o sprite do projétil inimigo não estiver disponível, desenha um retângulo laranja como fallback
+                DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);
+            }
+        } 
+
+        else{ // Tiros dos chefes (PROJETIL_BOSS1, 2 e 3): cada chefe tem o seu sprite
+            SpriteId sprite = p->tipo == PROJETIL_BOSS1 ? SPR_TIRO_BOSS1 : (p->tipo == PROJETIL_BOSS2 ? SPR_TIRO_BOSS2 : SPR_TIRO_BOSS3);
+
+            float altura = p->tipo == PROJETIL_BOSS1 ? 36.0f : (p->tipo == PROJETIL_BOSS2 ? 38.0f : 44.0f);
+
+            if (!SpritesDesenhar(sprite, cx, cy, altura, 0.0f, WHITE)){
+                // Se o sprite do projétil do chefe não estiver disponível, desenha um retângulo laranja como fallback
+                DrawRectangleRounded(p->corpo, 0.35f, 4, ORANGE);
+            }
         }
     }
 }

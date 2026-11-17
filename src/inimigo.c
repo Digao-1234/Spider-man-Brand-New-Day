@@ -4,6 +4,8 @@
 
 #include "config.h"
 
+#include "sprites.h"
+
 #include <stdlib.h>
 
 
@@ -31,9 +33,10 @@ void InimigosLimpar(ListaInimigos *lista){
     Inimigo *atual = lista->inicio;// Define um ponteiro para percorrer a lista de inimigos
 
     while (atual != NULL){// Enquanto houver inimigos na lista, libera a memória de cada inimigo
+
         Inimigo *proximo = atual->proximo;// Armazena o próximo inimigo antes de liberar a memória do atual
 
-        free(atual);
+        free(atual);// Libera a memória do inimigo atual
 
         atual = proximo;// Avança para o próximo inimigo na lista
     }
@@ -41,7 +44,7 @@ void InimigosLimpar(ListaInimigos *lista){
 
     for (int l = 0; l < LINHAS_INIMIGOS; l++){
         for (int c = 0; c < COLUNAS_INIMIGOS; c++){
-            lista->formacao[l][c] = 0;
+            lista->formacao[l][c] = 0;// Reinicia a formação de inimigos como vazia (0) para cada posição da matriz após limpar a lista
         }
     }
 }
@@ -116,7 +119,7 @@ void InimigosRemover(ListaInimigos *lista, Inimigo **elo){
 
     *elo = remover->proximo;// Atualiza o ponteiro para o próximo inimigo na lista, removendo o inimigo atual da lista
 
-    free(remover);
+    free(remover);// Libera a memória do inimigo removido
 }
 
 bool InimigosAtingiramBase(const ListaInimigos *lista, float limiteY){
@@ -125,6 +128,7 @@ bool InimigosAtingiramBase(const ListaInimigos *lista, float limiteY){
     }
 
     for (const Inimigo *i = lista->inicio; i != NULL; i = i->proximo){// Percorre a lista de inimigos e verifica se algum inimigo atingiu a base (limiteY)
+
         if (i->corpo.y + i->corpo.height >= limiteY){// Verifica se a posição vertical do inimigo ultrapassou o limite da base
              return true;// Retorna true se algum inimigo atingiu a base
         }
@@ -191,9 +195,14 @@ void InimigosDesenhar(const ListaInimigos *lista){
          return;// Verifica se a lista de inimigos é nula antes de desenhar os inimigos
     }
     for (const Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
-        Color cor = i->linha == 0 ? PURPLE : (i->linha == 1 ? ORANGE : GREEN);// Define a cor do inimigo com base na linha em que ele está na formação (linha 0 = roxo, linha 1 = laranja, linha 2 e 3 = verde)
-
         Rectangle r = i->corpo;// Define um retângulo com base no corpo do inimigo para desenhar na tela
+
+        if (SpritesDesenhar(SPR_INIMIGO, r.x + r.width / 2.0f, r.y + r.height / 2.0f, 42.0f, 0.0f, WHITE)){
+            continue;// Sprite desenhado (centralizado no corpo do inimigo); passa para o proximo inimigo
+        }
+
+        // se o PNG nao carregou, desenha o inimigo com retangulos
+        Color cor = i->linha == 0 ? PURPLE : (i->linha == 1 ? ORANGE : GREEN);// Define a cor do inimigo com base na linha em que ele está na formação (linha 0 = roxo, linha 1 = laranja, linha 2 e 3 = verde)
 
         DrawRectangleRounded(r, 0.18f, 4, cor);// Desenha o corpo do inimigo como um retângulo arredondado com a cor definida anteriormente
 

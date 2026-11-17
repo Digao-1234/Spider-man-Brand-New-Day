@@ -1,12 +1,17 @@
 #ifndef PROJETEIS_H
+
 #define PROJETEIS_H
 
 #include "raylib.h"
+
 #include <stdbool.h>
 
 typedef enum TipoProjetil{
     PROJETIL_TEIA = 0,
-    PROJETIL_INIMIGO = 1
+    PROJETIL_INIMIGO = 1,
+    PROJETIL_BOSS1 = 2, // Tiros dos chefes: machucam o jogador, so o desenho muda
+    PROJETIL_BOSS2 = 3,
+    PROJETIL_BOSS3 = 4
 } TipoProjetil;
 
 typedef struct Projetil{

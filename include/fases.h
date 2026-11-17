@@ -1,4 +1,5 @@
 #ifndef FASES_H
+
 #define FASES_H
 
 #include "raylib.h"
@@ -15,7 +16,7 @@ typedef enum{
     JOGO_DERROTA = 2
 } EstadoJogo;
 
-typedef struct{ // Estrutura que representa o chefe da fase
+typedef struct Chefe{ // Estrutura que representa o chefe da fase
     Rectangle corpo;
     
     int vida;
@@ -33,7 +34,7 @@ typedef struct{ // Estrutura que representa o chefe da fase
     bool ativo;
 } Chefe;
 
-typedef struct{ // Estrutura que representa as fases do jogo
+typedef struct Fases{ // Estrutura que representa as fases do jogo
     int faseAtual;
 
     int ondaFaseUm;// Número de ondas na fase 1

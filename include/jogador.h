@@ -1,4 +1,5 @@
 #ifndef JOGADOR_H
+
 #define JOGADOR_H
 
 #include "raylib.h"
@@ -17,6 +18,8 @@ typedef struct Jogador{
     float invulnerabilidade;
 
     int vidas;
+
+    int direcaoVisual; // -1 = andando para a esquerda, 0 = parado, 1 = direita (so escolhe o sprite)
 } Jogador;
 
 void JogadorInicializar(Jogador *jogador);

@@ -16,6 +16,8 @@
 
 #include "menu.h"
 
+#include "audio.h"
+
 #include <stdbool.h>
 
 #include <time.h>
@@ -162,8 +164,8 @@ static void PartidaDesenhar(const Partida *partida){
     // Cenario da fase atual (SPR_FUNDO_FASE1..3). Se o PNG nao carregou, volta ao fundo de estrelas.
     int fundo = partida->fases.faseAtual;
 
-    bool temFundo = fundo >= 1 && fundo <= 3 &&
-                    SpritesDesenharFundo((SpriteId)(SPR_FUNDO_FASE1 + (fundo - 1)), (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+    bool temFundo = fundo >= 1 && fundo <= 3 && SpritesDesenharFundo((SpriteId)(SPR_FUNDO_FASE1 + (fundo - 1)), (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+    // Desenha o fundo da fase atual, verificando se o sprite do fundo foi carregado corretamente e retornando true se o fundo foi desenhado com sucesso
 
     if (temFundo){
         // Faixas escuras suaves no topo e na base: o texto do HUD continua legivel sobre o cenario
@@ -280,6 +282,10 @@ int main(void){
 
     SpritesCarregar();// Carrega os PNGs de assets/sprites (precisa vir depois de InitWindow)
 
+    AudioCarregar();// Liga o audio e carrega os sons e a musica do menu
+
+    AudioMusicaMenuIniciar();// O jogo comeca no menu, entao a musica ja toca
+
     Partida partida = {0};
     // Inicializa a estrutura da partida com valores padrão, preparando-a para armazenar o estado do jogo, jogador, inimigos, projéteis, fases e pontuação
 
@@ -296,12 +302,16 @@ int main(void){
     while (!sair && !WindowShouldClose()){// Loop principal: continua ate o jogador escolher SAIR ou fechar a janela
 
         float dt = GetFrameTime();
+
+        AudioAtualizar();// Mantem a musica tocando (precisa ser chamado todo quadro)
         // Obtém o tempo delta (dt) desde o último quadro, representando o tempo decorrido entre as atualizações do jogo
 
         if (tela == TELA_MENU){
             MenuAcao acao = MenuAtualizar(&menu, dt);
 
             if (acao == MENU_ACAO_JOGAR){
+                AudioMusicaMenuParar();// Entrou no jogo: a musica do menu para
+
                 PartidaReiniciar(&partida);// Comeca sempre uma partida limpa (e le o recorde de novo)
 
                 tela = TELA_JOGO;
@@ -317,6 +327,8 @@ int main(void){
                 MenuInicializar(&menu);
 
                 tela = TELA_MENU;
+
+                AudioMusicaMenuIniciar();// Voltou ao menu: a musica recomeca
             }
             else {
                 PartidaAtualizar(&partida, dt);
@@ -343,6 +355,8 @@ int main(void){
     ProjeteisLimpar(&partida.projeteis);// Limpa a lista de projéteis, liberando a memória
 
     SpritesDescarregar();// Libera as texturas antes de fechar a janela
+
+    AudioDescarregar();// Libera os sons e desliga o audio antes de fechar a janela
 
     CloseWindow();// Fecha a janela do jogo, liberando os recursos associados à janela e encerrando a execução do jogo
     

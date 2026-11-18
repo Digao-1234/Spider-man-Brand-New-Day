@@ -23,16 +23,18 @@ static Rectangle MenuBotao(int i){
                         (float)(MENU_BOTAO_Y0 + i * MENU_BOTAO_PASSO),
                         (float)MENU_BOTAO_LARGURA,
                         (float)MENU_BOTAO_ALTURA };
+            // Botao centralizado horizontalmente, com altura e largura fixas, e espaçamento vertical entre os botoes
 }
 
 static void DesenharTextoCentralizado(const char *texto, int y, int tamanho, Color cor){
     DrawText(texto, (LARGURA_TELA - MeasureText(texto, tamanho)) / 2, y, tamanho, cor);
+    // Desenha o texto centralizado horizontalmente na tela, com a posição vertical, tamanho e cor especificados
 }
 
 static MenuAcao MenuAtivarOpcao(Menu *menu){
     // Executa o botao selecionado
 
-    switch (menu->opcao){
+    switch (menu->opcao){// Verifica qual opção do menu foi selecionada e retorna a ação correspondente para o main processar
         case 0:
             return MENU_ACAO_JOGAR;
 
@@ -46,6 +48,7 @@ static MenuAcao MenuAtivarOpcao(Menu *menu){
 }
 
 void MenuInicializar(Menu *menu){
+    // Inicializa a estrutura do menu com valores padrão, preparando-a para exibir as opções e controlar a navegação do usuário
     menu->opcao = 0;
 
     menu->mostrandoControles = false;
@@ -54,42 +57,52 @@ void MenuInicializar(Menu *menu){
 }
 
 MenuAcao MenuAtualizar(Menu *menu, float dt){
-    menu->tempo += dt;
+    // Atualiza o estado do menu com base no tempo decorrido (dt) e nas entradas do usuário, retornando a ação correspondente para o main processar
+    menu->tempo += dt;// Atualiza o tempo total desde que o menu foi aberto, usado para animações e efeitos visuais
 
     if (menu->mostrandoControles){
-        // Na tela de controles qualquer confirmacao volta ao menu
+        // Se o menu estiver mostrando a tela de controles, qualquer confirmação volta ao menu principal
 
         if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_ENTER) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+            // Verifica se o usuário pressionou ESC, ENTER ou clicou com o mouse para voltar ao menu principal
             menu->mostrandoControles = false;
         }
-        return MENU_ACAO_NENHUMA;
+        return MENU_ACAO_NENHUMA;// Retorna que nenhuma ação específica foi selecionada, mantendo o menu em exibição
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+        // Verifica se o usuário pressionou a tecla para baixo ou a tecla S para navegar para a próxima opção do menu
         menu->opcao = (menu->opcao + 1) % MENU_NUM_OPCOES;
     }
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+        // Verifica se o usuário pressionou a tecla para cima ou a tecla W para navegar para a opção anterior do menu
         menu->opcao = (menu->opcao + MENU_NUM_OPCOES - 1) % MENU_NUM_OPCOES;
     }
 
-    bool clicou = false;
+    bool clicou = false;// Variável para rastrear se o usuário clicou com o mouse em uma opção do menu
 
     Vector2 mouse = GetMousePosition();
+    // Obtém a posição atual do mouse na tela, usada para verificar se o cursor está sobre algum botão do menu
 
     Vector2 movimento = GetMouseDelta();
+    // Obtém o movimento do mouse desde o último quadro, usado para determinar se o cursor se moveu e evitar conflitos com a navegação por teclado
 
     for (int i = 0; i < MENU_NUM_OPCOES; i++){
+        // Itera sobre todas as opções do menu para verificar se o mouse está sobre algum botão e atualizar a seleção de acordo
         if (!CheckCollisionPointRec(mouse, MenuBotao(i))){
+            // Verifica se o ponto do mouse está dentro do retângulo do botão i, indicando que o cursor está sobre esse botão
             continue;
         }
 
         if (movimento.x != 0.0f || movimento.y != 0.0f){
+            // Verifica se o mouse se moveu desde o último quadro, evitando que a seleção mude apenas por estar parado sobre um botão
             menu->opcao = i;
             // So troca a selecao quando o mouse se mexe, senao um mouse parado em cima de um botao "brigaria" com o teclado
         }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+            // Verifica se o botão esquerdo do mouse foi pressionado enquanto o cursor está sobre o botão i, indicando que o usuário clicou nessa opção
             menu->opcao = i;
 
             clicou = true;
@@ -97,24 +110,27 @@ MenuAcao MenuAtualizar(Menu *menu, float dt){
     }
 
     if (IsKeyPressed(KEY_ENTER) || clicou){
-        // So o ENTER confirma (nao o ESPACO): o ESPACO e a tecla de atirar e o tiro sairia assim que a partida comecasse
+        // Verifica se o usuário pressionou ENTER ou clicou com o mouse em uma opção do menu para confirmar a seleção
 
         return MenuAtivarOpcao(menu);
     }
 
-    if (IsKeyPressed(KEY_ESCAPE)){
+    if (IsKeyPressed(KEY_ESCAPE)){// Verifica se o usuário pressionou ESC para sair do menu
         return MENU_ACAO_SAIR;
     }
 
-    return MENU_ACAO_NENHUMA;
+    return MENU_ACAO_NENHUMA;// Retorna que nenhuma ação específica foi selecionada, mantendo o menu em exibição
 }
 
 static void MenuDesenharControles(void){
+    // Desenha a tela de controles, mostrando as instruções para o jogador sobre como jogar o jogo
     DesenharTextoCentralizado("COMO JOGAR", 80, 44, RAYWHITE);
 
     DrawRectangle(180, 160, LARGURA_TELA - 360, 300, (Color){ 8, 12, 29, 210 });
+    // Desenha um retângulo de fundo para a área de instruções, com cor semi-transparente para destacar o texto
 
     DrawRectangleLines(180, 160, LARGURA_TELA - 360, 300, (Color){ 70, 90, 130, 255 });
+    // Desenha a borda do retângulo de instruções, com cor sólida para destacar a área de instruções
 
     const char *linhas[] = {
         "A / D ou setas    mover",
@@ -125,26 +141,28 @@ static void MenuDesenharControles(void){
     };
 
     for (int i = 0; i < 5; i++){
+        // Itera sobre as linhas de instruções e desenha cada uma na tela, espaçando-as verticalmente para melhor legibilidade
         DrawText(linhas[i], 210, 190 + i * 48, 18, RAYWHITE);
     }
 
     DesenharTextoCentralizado("ENTER ou ESC para voltar", ALTURA_TELA - 50, 18, LIGHTGRAY);
+    // Desenha a instrução para voltar ao menu principal na parte inferior da tela, com cor clara para destaque
 }
 
 void MenuDesenhar(const Menu *menu, int recorde){
+    // Desenha o menu principal, incluindo o fundo, título, opções e informações adicionais, proporcionando uma interface visual para o jogador interagir com o jogo
     ClearBackground((Color){ 8, 12, 29, 255 });
+    // Limpa a tela com uma cor de fundo sólida, preparando-a para desenhar os elementos do menu
 
-    // Reaproveita o cenario da fase 1. Se o PNG nao carregou, cai no fundo de estrelas (igual ao da partida)
-    // Fundo proprio do menu (assets/sprites/fundo_menu.png). Se nao existir, usa o cenario da fase 1
     bool temFundo = SpritesDesenharFundo(SPR_FUNDO_MENU, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+    // Tenta desenhar o sprite do fundo do menu, retornando true se o sprite foi carregado corretamente e desenhado com sucesso
 
-    if (!temFundo){
+    if (!temFundo){// Se o sprite do fundo do menu nao carregou, desenha o cenario da fase 1 como fundo alternativo
         temFundo = SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
     }
 
-    if (temFundo){
+    if (temFundo){// Se o sprite do fundo foi desenhado, escurece a tela para que o titulo e os botoes fiquem legiveis
         DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 140 });
-        // Escurece o cenario para o titulo e os botoes ficarem legiveis
     }
     else {
         for (int i = 0; i < 70; i++){

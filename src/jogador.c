@@ -6,6 +6,8 @@
 
 #include "sprites.h"
 
+#include "audio.h"
+
 #include <stddef.h>
 
 
@@ -67,6 +69,8 @@ void JogadorAtualizar(Jogador *jogador, ListaProjeteis *projeteis, float dt, boo
             jogador->corpo.y - 15.0f, 6.0f, 17.0f// Tamanho do projétil (teia)
         };
         ProjeteisAdicionar(projeteis, teia, -540.0f, PROJETIL_TEIA);// Adiciona o projétil (teia) à lista de projéteis
+
+        AudioTocar(SOM_TIRO_JOGADOR);// Som do disparo de teia
 
         jogador->intervaloDisparo = 0.23f;// Intervalo de disparo do jogador
     }

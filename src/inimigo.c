@@ -6,6 +6,8 @@
 
 #include "sprites.h"
 
+#include "audio.h"
+
 #include <stdlib.h>
 
 
@@ -214,7 +216,9 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
         }
 
         ProjeteisAdicionar(projeteis, disparo, 230.0f + fase * 12.0f, tipoTiro); 
-        // Adiciona o projétil disparado pelo inimigo à lista de projéteis, com velocidade vertical baseada na fase atual
+        // Adiciona o projétil disparado pelo inimigo escolhido à lista de projéteis, com velocidade vertical baseada na fase atual
+
+        AudioTocar(escolhido->tipo == INIMIGO_GUARDA ? SOM_TIRO_GUARDA : SOM_TIRO_NINJA);// Som do tiro do guarda ou do ninja
 
         lista->temporizadorDisparo = (float)GetRandomValue(65, 125) / 100.0f;
         // Reinicia o temporizador de disparo dos inimigos com um valor aleatório entre 0.65 e 1.25 segundos

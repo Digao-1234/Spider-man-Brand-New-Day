@@ -8,6 +8,8 @@
 
 #include "sprites.h"
 
+#include "audio.h"
+
 #include <stddef.h>
 
 
@@ -23,7 +25,8 @@ static TipoProjetil TipoTiroDoChefe(int tipo){// Cada chefe dispara o seu propri
     }
 }
 
-static void ChefeCriar(Fases *fases, int tipo){// Cria um chefe da fase com base no tipo especificado (1, 2 ou 3) e inicializa suas propriedades
+static void ChefeCriar(Fases *fases, int tipo){
+    // Cria um chefe da fase com base no tipo especificado (1, 2 ou 3) e inicializa suas propriedades
 
     Chefe *c = &fases->chefe;// Define um ponteiro para o chefe da fase atual
 
@@ -59,7 +62,9 @@ static void ChefeCriar(Fases *fases, int tipo){// Cria um chefe da fase com base
     c->vida = c->vidaMaxima;// Inicializa a vida atual do chefe como sua vida máxima
 }
 
-static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *projeteis, int numero){// Inicia uma nova fase do jogo com base no número especificado (1, 2 ou 3) e reinicializa as listas de inimigos e projéteis
+static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *projeteis, int numero){
+    // Inicia uma nova fase do jogo com base no número especificado (1, 2 ou 3) e reinicializa as listas de inimigos e projéteis
+    
     fases->faseAtual = numero;// Define a fase atual como o número especificado
 
     fases->chefe.ativo = false;// Marca o chefe como inativo, indicando que ele não está presente na fase
@@ -148,7 +153,8 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
     //Movimento e ataques de chefes.
 
-    if (fases->chefe.ativo){// Se o chefe estiver ativo, atualiza sua posição, verifica colisões com as bordas da tela e gerencia seus ataques
+    if (fases->chefe.ativo){
+        // Se o chefe estiver ativo, atualiza sua posição, verifica colisões com as bordas da tela e gerencia seus ataques
 
         Chefe *c = &fases->chefe;// Define um ponteiro para o chefe da fase atual
 
@@ -157,33 +163,44 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
         if (c->corpo.x < CenarioLimiteEsquerdo(c->tipo)){
         // Se a posição horizontal do chefe for menor que 10.0f (atingiu a borda esquerda da tela), ajusta sua posição para 10.0f e inverte a direção para a direita
 
-            c->corpo.x = CenarioLimiteEsquerdo(c->tipo);// Ajusta a posição horizontal do chefe para 10.0f, garantindo que ele não ultrapasse a borda esquerda da tela
+            c->corpo.x = CenarioLimiteEsquerdo(c->tipo);
+            // Ajusta a posição horizontal do chefe para 10.0f, garantindo que ele não ultrapasse a borda esquerda da tela
 
-            c->direcao = 1;// Inverte a direção do chefe para a direita (1), permitindo que ele se mova de volta para dentro da tela
+            c->direcao = 1;
+            // Inverte a direção do chefe para a direita (1), permitindo que ele se mova de volta para dentro da tela
         }
         if (c->corpo.x + c->corpo.width > CenarioLimiteDireito(c->tipo)){
     // Se a posição horizontal do chefe mais sua largura for maior que LARGURA_TELA - 10.0f (atingiu a borda direita da tela), ajusta sua posição para a borda direita e inverte a direção para a esquerda
 
-            c->corpo.x = CenarioLimiteDireito(c->tipo) - c->corpo.width;// Ajusta a posição horizontal do chefe para a borda direita da tela, garantindo que ele não ultrapasse a borda direita
+            c->corpo.x = CenarioLimiteDireito(c->tipo) - c->corpo.width;
+            // Ajusta a posição horizontal do chefe para a borda direita da tela, garantindo que ele não ultrapasse a borda direita
 
-            c->direcao = -1;// Inverte a direção do chefe para a esquerda (-1), permitindo que ele se mova de volta para dentro da tela
+            c->direcao = -1;
+            // Inverte a direção do chefe para a esquerda (-1), permitindo que ele se mova de volta para dentro da tela
         }
 
-        c->intervaloDisparo -= dt;// Reduz o intervalo de disparo do chefe com base no delta de tempo (dt), permitindo que ele dispare projéteis em intervalos regulares
+        c->intervaloDisparo -= dt;
+        // Reduz o intervalo de disparo do chefe com base no delta de tempo (dt), permitindo que ele dispare projéteis em intervalos regulares
 
-        if (c->intervaloDisparo <= 0.0f){// Se o intervalo de disparo do chefe for menor ou igual a 0.0f, significa que ele está pronto para disparar projéteis
+        if (c->intervaloDisparo <= 0.0f){
+            // Se o intervalo de disparo do chefe for menor ou igual a 0.0f, significa que ele está pronto para disparar projéteis
 
-            if (c->tipo == 2){// Boss 2 (Hulk): UM unico disparo grande. O hitbox (corpo) tem o mesmo tamanho do desenho do tiro
+            if (c->tipo == 2){
+                // Boss 2 (Hulk): UM unico disparo grande. O hitbox (corpo) tem o mesmo tamanho do desenho do tiro
                 Rectangle tiroGrande = {c->corpo.x + c->corpo.width / 2.0f - TIRO_BOSS2_LARGURA / 2.0f, c->corpo.y + c->corpo.height, TIRO_BOSS2_LARGURA, TIRO_BOSS2_ALTURA};
 
                 ProjeteisAdicionar(projeteis, tiroGrande, 260.0f + c->tipo * 25.0f, PROJETIL_BOSS2);
             }
             else{
-            Rectangle tiro = {c->corpo.x + c->corpo.width / 2.0f - 4.0f, c->corpo.y + c->corpo.height, 8.0f, 16.0f};// Define a posição e o tamanho do projétil que o chefe irá disparar, centralizando-o horizontalmente em relação ao corpo do chefe e posicionando-o logo abaixo do corpo
+            Rectangle tiro = {c->corpo.x + c->corpo.width / 2.0f - 4.0f, c->corpo.y + c->corpo.height, 8.0f, 16.0f};
+            // Define a posição e o tamanho do projétil que o chefe irá disparar, centralizando-o horizontalmente em relação ao corpo do chefe e posicionando-o logo abaixo do corpo
 
-            ProjeteisAdicionar(projeteis, tiro, 260.0f + c->tipo * 25.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo chefe à lista de projéteis, com velocidade vertical baseada no tipo do chefe (quanto maior o tipo, maior a velocidade do projétil)
+            ProjeteisAdicionar(projeteis, tiro, 260.0f + c->tipo * 25.0f, TipoTiroDoChefe(c->tipo));
+            // Adiciona o projétil disparado pelo chefe à lista de projéteis, com velocidade vertical baseada no tipo do chefe (quanto maior o tipo, maior a velocidade do projétil)
 
-            if (c->tipo == 3){// Chefe final (tipo 3): dispara projéteis adicionais em posições laterais para aumentar a dificuldade do ataque
+            if (c->tipo == 3){
+                // Chefe final (tipo 3): dispara projéteis adicionais em posições laterais para aumentar a dificuldade do ataque
+
                 float espalha = 130.0f;// Distancia dos tiros laterais ate o centro do chefe (a mesma de antes)
 
                 float centroChefe = c->corpo.x + c->corpo.width / 2.0f;
@@ -201,6 +218,8 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
                 // Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
             }
             }
+            AudioTocar(c->tipo == 1 ? SOM_TIRO_BOSS1 : (c->tipo == 2 ? SOM_TIRO_BOSS2 : SOM_TIRO_BOSS3));// Um som por rajada (a Jean Grey dispara 3 projeteis de uma vez)
+
             c->intervaloDisparo = c->tipo == 3 ? 0.52f : 0.9f;
             // Reinicia o intervalo de disparo do chefe com base no tipo do chefe (quanto maior o tipo, menor o intervalo de disparo)
         }
@@ -231,7 +250,8 @@ static float EscalaVisualChefe(int tipo){
 }
 
 void FasesDesenhar(const Fases *fases){
-    if (fases == NULL || !fases->chefe.ativo){// Verifica se o ponteiro de fases é nulo ou se o chefe não está ativo antes de desenhar o chefe da fase
+    if (fases == NULL || !fases->chefe.ativo){
+        // Verifica se o ponteiro de fases é nulo ou se o chefe não está ativo antes de desenhar o chefe da fase
          return;
     }
     const Chefe *c = &fases->chefe;

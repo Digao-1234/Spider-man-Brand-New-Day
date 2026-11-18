@@ -65,27 +65,27 @@ O `make` é só um atalho: o jogo pode ser compilado sem ele, com os comandos ab
 
 **Windows (MSYS2 UCRT64):**
 ```
-gcc -std=c11 -Iinclude src/main.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c -o homem_aranha.exe $(pkg-config --cflags --libs raylib)
+gcc -std=c11 -Iinclude src/main.c src/menu.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c src/audio.c -o homem_aranha.exe $(pkg-config --cflags --libs raylib)
 ./homem_aranha.exe
 ```
 Se o `pkg-config` der problema, troque o final do comando por `-lraylib -lopengl32 -lgdi32 -lwinmm`.
 
 **Windows (w64devkit / instalador da Raylib):**
 ```
-gcc -std=c11 -Iinclude src/main.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c -o homem_aranha.exe -lraylib -lopengl32 -lgdi32 -lwinmm
+gcc -std=c11 -Iinclude src/main.c src/menu.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c src/audio.c -o homem_aranha.exe -lraylib -lopengl32 -lgdi32 -lwinmm
 .\homem_aranha.exe
 ```
 Se der `raylib.h: No such file`, acrescente o caminho da sua instalação: `-IC:/raylib/raylib/src -LC:/raylib/raylib/src`.
 
 **Linux:**
 ```
-gcc -std=c11 -Iinclude src/main.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c -o homem_aranha $(pkg-config --cflags --libs raylib) -lm
+gcc -std=c11 -Iinclude src/main.c src/menu.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c src/audio.c -o homem_aranha $(pkg-config --cflags --libs raylib) -lm
 ./homem_aranha
 ```
 
 **macOS:**
 ```
-gcc -std=c11 -Iinclude src/main.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c -o homem_aranha -lraylib -framework IOKit -framework Cocoa -framework OpenGL
+gcc -std=c11 -Iinclude src/main.c src/menu.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c src/audio.c -o homem_aranha -lraylib -framework IOKit -framework Cocoa -framework OpenGL
 ./homem_aranha
 ```
 

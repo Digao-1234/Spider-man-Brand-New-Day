@@ -2,7 +2,7 @@
 # Rode SEMPRE a partir da pasta raiz do projeto (assets/ e saves/ sao caminhos relativos).
 CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -Iinclude -IC:/raylib/include
-SRC = src/main.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c
+SRC = src/main.c src/menu.c src/jogador.c src/inimigo.c src/projeteis.c src/fases.c src/arquivos.c src/sprites.c
 TARGET = homem_aranha
 
 ifeq ($(OS),Windows_NT)

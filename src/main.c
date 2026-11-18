@@ -14,6 +14,8 @@
 
 #include "sprites.h"
 
+#include "menu.h"
+
 #include <stdbool.h>
 
 #include <time.h>
@@ -218,7 +220,7 @@ static void PartidaDesenhar(const Partida *partida){
         DrawText("ONDA 1/1", 805, 52, 18, LIGHTGRAY);// Fase 3: uma unica onda de ninjas antes do chefe final
     }
 
-    DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Sair: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);
+    DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Menu: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);
     // Desenha as instruções de controle do jogo na tela, informando ao jogador como mover, disparar, pausar e sair do jogo
 
     if (partida->pausado && partida->estado == JOGO_EM_ANDAMENTO){
@@ -255,12 +257,20 @@ static void PartidaDesenhar(const Partida *partida){
     }
 }
 
+typedef enum{ // Em qual tela o programa esta
+    TELA_MENU = 0,
+    TELA_JOGO
+} Tela;
+
 int main(void){
     SetConfigFlags(FLAG_VSYNC_HINT);
     // Define a configuração de sincronização vertical para o jogo, garantindo que a taxa de atualização da tela seja sincronizada com a taxa de quadros do jogo
 
     InitWindow(LARGURA_TELA, ALTURA_TELA, "Homem-Aranha: Um Novo Dia");
     // Inicializa a janela do jogo com as dimensões especificadas e o título "Homem-Aranha: Um Novo Dia"
+
+    SetExitKey(KEY_NULL);
+    // Desliga o ESC como tecla de saida automatica da raylib: no menu o ESC sai, na partida o ESC volta ao menu
 
     SetTargetFPS(60);
     // Define a taxa de quadros alvo para o jogo como 60 quadros por segundo
@@ -275,20 +285,54 @@ int main(void){
 
     PartidaInicializar(&partida);// Inicializa a partida, configurando o jogador, inimigos, projéteis, fases e estado do jogo
 
-    while (!WindowShouldClose()){// Loop principal do jogo, que continua enquanto a janela não for fechada
+    Menu menu;
+
+    MenuInicializar(&menu);
+
+    Tela tela = TELA_MENU;// O jogo abre no menu
+
+    bool sair = false;
+
+    while (!sair && !WindowShouldClose()){// Loop principal: continua ate o jogador escolher SAIR ou fechar a janela
 
         float dt = GetFrameTime();
         // Obtém o tempo delta (dt) desde o último quadro, representando o tempo decorrido entre as atualizações do jogo
 
-        PartidaAtualizar(&partida, dt);
-        // Atualiza o estado da partida, incluindo o jogador, inimigos, projéteis, fases e verificando condições de vitória ou derrota com base no tempo delta (dt)
+        if (tela == TELA_MENU){
+            MenuAcao acao = MenuAtualizar(&menu, dt);
 
-        BeginDrawing();// Inicia o processo de desenho na tela, preparando-a para desenhar os elementos visuais da partida
+            if (acao == MENU_ACAO_JOGAR){
+                PartidaReiniciar(&partida);// Comeca sempre uma partida limpa (e le o recorde de novo)
 
-        PartidaDesenhar(&partida);
-        // Desenha os elementos visuais da partida, incluindo o fundo, informações do jogo, inimigos, fases, projéteis e jogador, além de mensagens de pausa e fim de jogo
+                tela = TELA_JOGO;
+            }
+            else if (acao == MENU_ACAO_SAIR){
+                sair = true;
+            }
+        }
+        else {
+            if (IsKeyPressed(KEY_ESCAPE)){
+                SalvarRecordeSeNecessario(&partida);// Salva o recorde da partida em curso antes de sair dela
 
-        EndDrawing();// Finaliza o processo de desenho na tela, exibindo os elementos visuais desenhados durante o quadro atual
+                MenuInicializar(&menu);
+
+                tela = TELA_MENU;
+            }
+            else {
+                PartidaAtualizar(&partida, dt);
+            }
+        }
+
+        BeginDrawing();// Inicia o processo de desenho na tela
+
+        if (tela == TELA_MENU){
+            MenuDesenhar(&menu, partida.recorde);
+        }
+        else {
+            PartidaDesenhar(&partida);
+        }
+
+        EndDrawing();// Finaliza o processo de desenho na tela, exibindo o quadro
     }
 
     SalvarRecordeSeNecessario(&partida);

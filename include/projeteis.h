@@ -15,6 +15,12 @@ typedef enum TipoProjetil{
     PROJETIL_GUARDA = 5 // Tiro dos guardas (fase 1): machuca o jogador como os outros, so o desenho muda
 } TipoProjetil;
 
+// Tiro do Boss 2 (Hulk): um unico disparo grande. O DESENHO e a COLISAO usam este mesmo tamanho.
+// Para aumentar/diminuir o tiro, mude so TIRO_BOSS2_ALTURA: a largura acompanha a proporcao do sprite
+// (recorte de projetil_Boss2.png em sprites.c: largura 455 x altura 777), e o hitbox e o desenho mudam juntos.
+#define TIRO_BOSS2_ALTURA 110.0f
+#define TIRO_BOSS2_LARGURA (TIRO_BOSS2_ALTURA * 455.0f / 777.0f)
+
 typedef struct Projetil{
     Rectangle corpo;
 

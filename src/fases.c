@@ -173,12 +173,18 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
         if (c->intervaloDisparo <= 0.0f){// Se o intervalo de disparo do chefe for menor ou igual a 0.0f, significa que ele está pronto para disparar projéteis
 
+            if (c->tipo == 2){// Boss 2 (Hulk): UM unico disparo grande. O hitbox (corpo) tem o mesmo tamanho do desenho do tiro
+                Rectangle tiroGrande = {c->corpo.x + c->corpo.width / 2.0f - TIRO_BOSS2_LARGURA / 2.0f, c->corpo.y + c->corpo.height, TIRO_BOSS2_LARGURA, TIRO_BOSS2_ALTURA};
+
+                ProjeteisAdicionar(projeteis, tiroGrande, 260.0f + c->tipo * 25.0f, PROJETIL_BOSS2);
+            }
+            else{
             Rectangle tiro = {c->corpo.x + c->corpo.width / 2.0f - 4.0f, c->corpo.y + c->corpo.height, 8.0f, 16.0f};// Define a posição e o tamanho do projétil que o chefe irá disparar, centralizando-o horizontalmente em relação ao corpo do chefe e posicionando-o logo abaixo do corpo
 
             ProjeteisAdicionar(projeteis, tiro, 260.0f + c->tipo * 25.0f, TipoTiroDoChefe(c->tipo));// Adiciona o projétil disparado pelo chefe à lista de projéteis, com velocidade vertical baseada no tipo do chefe (quanto maior o tipo, maior a velocidade do projétil)
 
-            if (c->tipo >= 2){// Se o tipo do chefe for 2 ou maior (miniboss ou chefe final), dispara projéteis adicionais em posições laterais para aumentar a dificuldade do ataque
-                float espalha = c->tipo == 3 ? 130.0f : 70.0f;// Distancia dos tiros laterais ate o centro do chefe (a mesma de antes)
+            if (c->tipo == 3){// Chefe final (tipo 3): dispara projéteis adicionais em posições laterais para aumentar a dificuldade do ataque
+                float espalha = 130.0f;// Distancia dos tiros laterais ate o centro do chefe (a mesma de antes)
 
                 float centroChefe = c->corpo.x + c->corpo.width / 2.0f;
 
@@ -193,6 +199,7 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
                 ProjeteisAdicionar(projeteis, tiroDir, 250.0f, TipoTiroDoChefe(c->tipo));
                 // Adiciona o projétil disparado pelo lado direito do chefe à lista de projéteis, com velocidade vertical fixa de 250.0f
+            }
             }
             c->intervaloDisparo = c->tipo == 3 ? 0.52f : 0.9f;
             // Reinicia o intervalo de disparo do chefe com base no tipo do chefe (quanto maior o tipo, menor o intervalo de disparo)

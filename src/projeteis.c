@@ -128,7 +128,8 @@ void ProjeteisDesenhar(const ListaProjeteis *lista){
         else{ // Tiros dos chefes (PROJETIL_BOSS1, 2 e 3): cada chefe tem o seu sprite
             SpriteId sprite = p->tipo == PROJETIL_BOSS1 ? SPR_TIRO_BOSS1 : (p->tipo == PROJETIL_BOSS2 ? SPR_TIRO_BOSS2 : SPR_TIRO_BOSS3);
 
-            float altura = p->tipo == PROJETIL_BOSS1 ? 36.0f : (p->tipo == PROJETIL_BOSS2 ? 38.0f : 44.0f);
+            float altura = p->tipo == PROJETIL_BOSS1 ? 36.0f : (p->tipo == PROJETIL_BOSS2 ? p->corpo.height : 44.0f);
+            // Boss 2: o sprite e desenhado exatamente no tamanho do hitbox (corpo), entao colisao e visual coincidem
 
             if (!SpritesDesenhar(sprite, cx, cy, altura, 0.0f, WHITE)){
                 // Se o sprite do projétil do chefe não estiver disponível, desenha um retângulo laranja como fallback

@@ -154,17 +154,17 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
 
         c->corpo.x += (float)c->direcao * c->velocidade * dt;// Atualiza a posição horizontal do chefe com base na direção e na velocidade, multiplicando pelo delta de tempo (dt) para garantir movimento suave e consistente
 
-        if (c->corpo.x < 10.0f){
+        if (c->corpo.x < CenarioLimiteEsquerdo(c->tipo)){
         // Se a posição horizontal do chefe for menor que 10.0f (atingiu a borda esquerda da tela), ajusta sua posição para 10.0f e inverte a direção para a direita
 
-            c->corpo.x = 10.0f;// Ajusta a posição horizontal do chefe para 10.0f, garantindo que ele não ultrapasse a borda esquerda da tela
+            c->corpo.x = CenarioLimiteEsquerdo(c->tipo);// Ajusta a posição horizontal do chefe para 10.0f, garantindo que ele não ultrapasse a borda esquerda da tela
 
             c->direcao = 1;// Inverte a direção do chefe para a direita (1), permitindo que ele se mova de volta para dentro da tela
         }
-        if (c->corpo.x + c->corpo.width > LARGURA_TELA - 10.0f){
+        if (c->corpo.x + c->corpo.width > CenarioLimiteDireito(c->tipo)){
     // Se a posição horizontal do chefe mais sua largura for maior que LARGURA_TELA - 10.0f (atingiu a borda direita da tela), ajusta sua posição para a borda direita e inverte a direção para a esquerda
 
-            c->corpo.x = LARGURA_TELA - 10.0f - c->corpo.width;// Ajusta a posição horizontal do chefe para a borda direita da tela, garantindo que ele não ultrapasse a borda direita
+            c->corpo.x = CenarioLimiteDireito(c->tipo) - c->corpo.width;// Ajusta a posição horizontal do chefe para a borda direita da tela, garantindo que ele não ultrapasse a borda direita
 
             c->direcao = -1;// Inverte a direção do chefe para a esquerda (-1), permitindo que ele se mova de volta para dentro da tela
         }
@@ -209,6 +209,20 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
     }
 }
 
+static float EscalaVisualChefe(int tipo){
+    // Fator so do DESENHO do chefe (1.0 = tamanho do corpo). O hitbox (corpo) nao muda. Ajuste aqui se ainda achar grande/pequeno
+
+    if (tipo == 1){
+        return 0.70f; // Escorpiao
+    }
+
+    if (tipo == 3){
+        return 0.70f; // Jean Grey
+    }
+
+    return 1.0f; // Hulk (miniboss) continua como estava
+}
+
 void FasesDesenhar(const Fases *fases){
     if (fases == NULL || !fases->chefe.ativo){// Verifica se o ponteiro de fases é nulo ou se o chefe não está ativo antes de desenhar o chefe da fase
          return;
@@ -221,7 +235,7 @@ void FasesDesenhar(const Fases *fases){
 
     SpriteId sprite = (SpriteId)(SPR_BOSS1 + (c->tipo - 1));// SPR_BOSS1, SPR_BOSS2 e SPR_BOSS3 estao em sequencia no enum
 
-    if (!SpritesDesenhar(sprite, c->corpo.x + c->corpo.width / 2.0f, c->corpo.y + c->corpo.height / 2.0f, c->corpo.height, 0.0f, WHITE)){
+    if (!SpritesDesenhar(sprite, c->corpo.x + c->corpo.width / 2.0f, c->corpo.y + c->corpo.height / 2.0f, c->corpo.height * EscalaVisualChefe(c->tipo), 0.0f, WHITE)){
 
         //se o PNG nao carregou, desenha o chefe com retangulos como antes
         DrawRectangleRounded(c->corpo, 0.16f, 8, cor);// Desenha o corpo do chefe como um retângulo arredondado com a cor definida anteriormente

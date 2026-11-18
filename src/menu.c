@@ -135,7 +135,7 @@ void MenuDesenhar(const Menu *menu, int recorde){
     ClearBackground((Color){ 8, 12, 29, 255 });
 
     // Reaproveita o cenario da fase 1. Se o PNG nao carregou, cai no fundo de estrelas (igual ao da partida)
-    bool temFundo = SpritesDesenhar(SPR_FUNDO_FASE1, 0.0f, 0.0f, (float)ALTURA_TELA, 0.0f, WHITE);
+    bool temFundo = SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
 
     if (temFundo){
         DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 140 });

@@ -57,7 +57,7 @@ void InimigosCriarOnda(ListaInimigos *lista, TipoInimigo tipo){
 
     InimigosLimpar(lista);// Limpa a lista de inimigos antes de criar uma nova onda
 
-    const float espacamentoX = 62.0f;// Define o espaçamento horizontal entre os inimigos na formação
+    const float espacamentoX = 48.0f;// Define o espaçamento horizontal entre os inimigos na formação
 
     const float espacamentoY = 43.0f;// Define o espaçamento vertical entre os inimigos na formação
 
@@ -155,6 +155,10 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
     float velocidade = 36.0f + (float)(fase - 1) * 9.0f + (float)(onda - 1) * 7.0f;
     // Calcula a velocidade de movimento dos inimigos com base na fase e na onda atual
 
+    const float limiteEsq = CenarioLimiteEsquerdo(fase);// Paredes do cenario da fase: os inimigos nao passam daqui
+
+    const float limiteDir = CenarioLimiteDireito(fase);
+
     bool atingiuBorda = false;// Inicializa uma variável para verificar se algum inimigo atingiu a borda da tela
 
     for (Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
@@ -165,7 +169,7 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
         i->corpo.x += (float)lista->direcao * velocidade * dt;
         // Atualiza a posição horizontal do inimigo com base na direção e na velocidade
 
-        if (i->corpo.x <= 10.0f || i->corpo.x + i->corpo.width >= LARGURA_TELA - 10.0f){
+        if (i->corpo.x <= limiteEsq || i->corpo.x + i->corpo.width >= limiteDir){
             atingiuBorda = true;// Verifica se algum inimigo atingiu a borda da tela (10 pixels de margem)
         }
     }
@@ -174,7 +178,7 @@ void InimigosAtualizar(ListaInimigos *lista, ListaProjeteis *projeteis, float dt
         lista->direcao *= -1;// Inverte a direção de movimento dos inimigos se algum deles atingiu a borda da tela
 
         for (Inimigo *i = lista->inicio; i != NULL; i = i->proximo){
-            i->corpo.y += 13.0f;// Move os inimigos para baixo em 13 pixels ao atingir a borda da tela
+            i->corpo.y += 6.0f;// Desce 6 pixels ao bater na parede. Era 13 quando o vai-e-vem tinha ~410 px; no corredor tem ~180, entao 6 mantem a mesma velocidade de descida
 
             i->corpo.x += (float)lista->direcao * velocidade * dt;
             // Atualiza a posição horizontal do inimigo novamente após inverter a direção

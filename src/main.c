@@ -163,7 +163,7 @@ static void PartidaDesenhar(const Partida *partida){
     int fundo = partida->fases.faseAtual;
 
     bool temFundo = fundo >= 1 && fundo <= 3 &&
-                    SpritesDesenhar((SpriteId)(SPR_FUNDO_FASE1 + (fundo - 1)), 0.0f, 0.0f, (float)ALTURA_TELA, 0.0f, WHITE);
+                    SpritesDesenharFundo((SpriteId)(SPR_FUNDO_FASE1 + (fundo - 1)), (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
 
     if (temFundo){
         // Faixas escuras suaves no topo e na base: o texto do HUD continua legivel sobre o cenario

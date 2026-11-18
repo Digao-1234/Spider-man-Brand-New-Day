@@ -32,11 +32,12 @@ static Sprite sprites[SPR_TOTAL] = {// Tabela de sprites: arquivo, recorte (area
     [SPR_TIRO_BOSS2]       = {"assets/sprites/projetil_Boss2.png",       { 133.0f,  49.0f, 455.0f,  777.0f}, 0.50f, 0.5f},
     [SPR_TIRO_BOSS3]       = {"assets/sprites/projetil_Boss3.png",       { 136.0f,  64.0f, 676.0f, 1585.0f}, 0.50f, 0.5f},
 
-    // Cenarios (imagens em retrato). O recorte e uma janela com a mesma proporcao da tela (960x640 = 3:2);
+    // Cenarios (imagens em retrato). O recorte e uma janela 40% mais ALTA que a proporcao da tela (3:2): ela e espremida
+    // na vertical ao desenhar, entao aparece mais cenario e os detalhes ficam menores. Para ampliar de novo, diminua a altura (4o numero);
     
-    [SPR_FUNDO_FASE1]      = {"assets/sprites/Fase_1.png",               {   0.0f, 426.0f, 1024.0f, 682.67f}, 0.0f, 0.0f},
-    [SPR_FUNDO_FASE2]      = {"assets/sprites/Fase2.png",                {   0.0f, 261.0f,  941.0f, 627.33f}, 0.0f, 0.0f},
-    [SPR_FUNDO_FASE3]      = {"assets/sprites/Fase_3.png",               {   0.0f, 170.0f, 1024.0f, 682.67f}, 0.0f, 0.0f}
+    [SPR_FUNDO_FASE1]      = {"assets/sprites/Fase_1.png",               {   0.0f, 289.5f, 1024.0f, 955.7f}, 0.0f, 0.0f},
+    [SPR_FUNDO_FASE2]      = {"assets/sprites/Fase2.png",                {   0.0f, 135.5f,  941.0f, 878.3f}, 0.0f, 0.0f},
+    [SPR_FUNDO_FASE3]      = {"assets/sprites/Fase_3.png",               {   0.0f,  33.5f, 1024.0f, 955.7f}, 0.0f, 0.0f}
 };
 
 void SpritesCarregar(void){// Carrega todas as texturas. Chamar UMA vez, depois de InitWindow()
@@ -99,4 +100,18 @@ bool SpritesDesenhar(SpriteId id, float x, float y, float altura, float rotacao,
     // Desenha o sprite na tela, com recorte, destino, origem, rotacao e cor de tintura especificados
 
     return true;//o sprite foi desenhado
+}
+
+bool SpritesDesenharFundo(SpriteId id, float largura, float altura, Color tint){
+    // Desenha o recorte do sprite esticado para largura x altura, sem manter a proporcao
+
+    if ((int)id < 0 || (int)id >= SPR_TOTAL || largura <= 0.0f || altura <= 0.0f || !sprites[id].carregado){
+        return false;// Sem textura: quem chamou desenha o fundo de estrelas
+    }
+
+    const Sprite *s = &sprites[id];
+
+    DrawTexturePro(s->textura, s->recorte, (Rectangle){0.0f, 0.0f, largura, altura}, (Vector2){0.0f, 0.0f}, 0.0f, tint);
+
+    return true;
 }

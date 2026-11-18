@@ -25,6 +25,7 @@ typedef enum{ // Identificador de cada sprite do jogo
     SPR_FUNDO_FASE1,      // Cenarios: um por fase (SPR_FUNDO_FASE1 + fase - 1)
     SPR_FUNDO_FASE2,
     SPR_FUNDO_FASE3,
+    SPR_FUNDO_MENU,       // Fundo do menu inicial (assets/sprites/fundo_menu.png). Se o arquivo nao existir, o menu usa o cenario da fase 1
     SPR_TOTAL
 } SpriteId;
 

@@ -10,9 +10,9 @@
 
 #define MENU_NUM_OPCOES 3
 #define MENU_BOTAO_LARGURA 320
-#define MENU_BOTAO_ALTURA 46
-#define MENU_BOTAO_Y0 300
-#define MENU_BOTAO_PASSO 62
+#define MENU_BOTAO_ALTURA 40
+#define MENU_BOTAO_Y0 436   // Botoes mais abaixo para nao cobrir o Homem-Aranha do fundo. Para subir/descer todos, mude so este valor
+#define MENU_BOTAO_PASSO 50
 
 static const char *textosOpcoes[MENU_NUM_OPCOES] = { "JOGAR", "COMO JOGAR", "SAIR" };
 
@@ -135,7 +135,12 @@ void MenuDesenhar(const Menu *menu, int recorde){
     ClearBackground((Color){ 8, 12, 29, 255 });
 
     // Reaproveita o cenario da fase 1. Se o PNG nao carregou, cai no fundo de estrelas (igual ao da partida)
-    bool temFundo = SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+    // Fundo proprio do menu (assets/sprites/fundo_menu.png). Se nao existir, usa o cenario da fase 1
+    bool temFundo = SpritesDesenharFundo(SPR_FUNDO_MENU, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+
+    if (!temFundo){
+        temFundo = SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
+    }
 
     if (temFundo){
         DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 140 });
@@ -183,7 +188,7 @@ void MenuDesenhar(const Menu *menu, int recorde){
                  selecionado ? RAYWHITE : LIGHTGRAY);
     }
 
-    DesenharTextoCentralizado(TextFormat("RECORDE: %d", recorde), 500, 20, GOLD);
+    DesenharTextoCentralizado(TextFormat("RECORDE: %d", recorde), 232, 20, GOLD);// Logo abaixo do titulo (os botoes ficam la embaixo)
 
     DesenharTextoCentralizado("W/S ou setas: escolher   |   ENTER ou clique: confirmar   |   ESC: sair", ALTURA_TELA - 28, 15, LIGHTGRAY);
 }

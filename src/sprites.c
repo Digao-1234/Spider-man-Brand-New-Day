@@ -37,7 +37,11 @@ static Sprite sprites[SPR_TOTAL] = {// Tabela de sprites: arquivo, recorte (area
     
     [SPR_FUNDO_FASE1]      = {"assets/sprites/Fase_1.png",               {   0.0f, 289.5f, 1024.0f, 955.7f}, 0.0f, 0.0f},
     [SPR_FUNDO_FASE2]      = {"assets/sprites/Fase2.png",                {   0.0f, 135.5f,  941.0f, 878.3f}, 0.0f, 0.0f},
-    [SPR_FUNDO_FASE3]      = {"assets/sprites/Fase_3.png",               {   0.0f,  33.5f, 1024.0f, 955.7f}, 0.0f, 0.0f}
+    [SPR_FUNDO_FASE3]      = {"assets/sprites/Fase_3.png",               {   0.0f,  33.5f, 1024.0f, 955.7f}, 0.0f, 0.0f},
+
+    // Fundo do menu: recorte {0, 0, 0, 0} = usa a imagem INTEIRA (o tamanho e lido do proprio PNG ao carregar).
+    // Basta salvar a imagem como assets/sprites/fundo_menu.png. Use proporcao 3:2 (ex.: 1440x960) para nao distorcer na tela de 960x640
+    [SPR_FUNDO_MENU]       = {"assets/sprites/fundo_menu.png",           {   0.0f,   0.0f,    0.0f,   0.0f}, 0.0f, 0.0f}
 };
 
 void SpritesCarregar(void){// Carrega todas as texturas. Chamar UMA vez, depois de InitWindow()
@@ -57,6 +61,11 @@ void SpritesCarregar(void){// Carrega todas as texturas. Chamar UMA vez, depois 
         }
 
         
+        if (s->recorte.width <= 0.0f || s->recorte.height <= 0.0f){
+            // Recorte vazio na tabela = usar a imagem inteira
+            s->recorte = (Rectangle){0.0f, 0.0f, (float)s->textura.width, (float)s->textura.height};
+        }
+
         GenTextureMipmaps(&s->textura);
         // Gera mipmaps para a textura, melhorando a qualidade da imagem quando ela é redimensionada
 

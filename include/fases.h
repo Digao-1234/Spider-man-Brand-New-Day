@@ -46,6 +46,18 @@ typedef struct Transicao{ // Animacao entre fases (e cartao de abertura da fase 
     bool trocou; // true depois que o cenario/inimigos da fase destino ja foram criados (acontece na tela preta)
 } Transicao;
 
+typedef struct Aviso{ // Faixa de aviso mostrada quando uma onda de inimigos termina
+    bool ativo;
+
+    float tempo; // Segundos desde o inicio da faixa
+
+    int fase; // Fase em que a onda terminou
+
+    int onda; // Numero da onda que acabou de terminar
+
+    int proximoChefe; // 0 = vem outra onda depois; 1, 2 ou 3 = tipo do chefe que aparece em seguida
+} Aviso;
+
 typedef struct Fases{ // Estrutura que representa as fases do jogo
     int faseAtual;
 
@@ -54,6 +66,8 @@ typedef struct Fases{ // Estrutura que representa as fases do jogo
     Chefe chefe;
 
     Transicao transicao;
+
+    Aviso aviso;
 } Fases;
 
 void FasesInicializar(Fases *fases, struct ListaInimigos *inimigos, struct ListaProjeteis *projeteis); 
@@ -62,7 +76,7 @@ void FasesInicializar(Fases *fases, struct ListaInimigos *inimigos, struct Lista
 void FasesAtualizar(Fases *fases, struct ListaInimigos *inimigos, struct ListaProjeteis *projeteis, float dt,
                     EstadoJogo *estado); // Atualiza o estado do jogo com base na fase atual, inimigos e projéteis.
 
-bool FasesEmTransicao(const Fases *fases); // true enquanto a animacao entre fases esta rodando (o jogo fica congelado)
+bool FasesEmTransicao(const Fases *fases); // true enquanto a animacao entre fases OU a faixa de fim de onda esta rodando (o jogo fica congelado)
 
 void FasesDesenharTransicao(const Fases *fases); // Desenha a animacao por cima de tudo. Nao desenha nada se nao houver transicao
 

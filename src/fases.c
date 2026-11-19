@@ -81,6 +81,8 @@ static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *p
 
     ProjeteisLimpar(projeteis);// Limpa a lista de projéteis, removendo todos os elementos e liberando a memória
 
+    fases->aviso.ativo = false;// Uma fase nova nunca comeca com a faixa de fim de onda da fase anterior na tela
+
     if (numero == 1){// Se o número da fase for 1, define a onda da fase 1 como 1 e cria uma nova onda de inimigos
         fases->ondaFaseUm = 1;
 
@@ -115,6 +117,12 @@ static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *p
 //   3.2        o estado vira JOGO_VITORIA e o jogo mostra "VOCE VENCEU!"
 #define TRANSICAO_FINAL_FIM 3.2f
 
+// Aviso de fim de onda: uma faixa que abre no meio da tela, mostra o texto e fecha. Dura AVISO_FIM segundos.
+//   0.0 - 0.3  a faixa abre          0.25 - 0.55  o texto aparece
+//   ate 1.6    texto na tela         1.6 - 2.2    o texto some e a faixa fecha
+// Quando acaba, a proxima onda (ou o chefe) aparece.
+#define AVISO_FIM 2.2f
+
 static float Rampa(float t, float inicio, float duracao){
     // 0 antes de "inicio", 1 depois de "inicio + duracao", e uma subida suave (smoothstep) entre os dois
 
@@ -131,14 +139,95 @@ static float Rampa(float t, float inicio, float duracao){
     return v * v * (3.0f - 2.0f * v);
 }
 
+// ======================= NOMES (para mudar um nome, edite SO aqui) =======================
+// Os nomes dos chefes aparecem na barra de vida, nas animacoes entre fases e no aviso de fim de onda.
+// Se trocar o genero de um chefe (ex.: Jean Grey e feminino), ajuste tambem a funcao ChefeDerrotado mais abaixo.
 static const char *NomeDoChefe(int tipo){
     return tipo == 1 ? "Escorpião" : (tipo == 2 ? "Hulk" : "Jean Grey");
 }
+
+// Nome opcional de cada fase: aparece no cartao de abertura, entre "FASE N" e o chefe. "" = nao mostra nada.
+// Exemplo: troque o "" da fase 1 por "O Corredor Verde".
+static const char *NomeDaFase(int fase){
+    switch (fase){
+        case 1:  return "";
+        case 2:  return "";
+        default: return "";
+    }
+}
+// ==========================================================================================
 
 static const char *ChefeDerrotado(int tipo){
     // "Escorpião derrotado!", "Hulk derrotado!", "Jean Grey derrotada!" (concordancia certa)
 
     return TextFormat("%s %s", NomeDoChefe(tipo), tipo == 3 ? "derrotada!" : "derrotado!");
+}
+
+static void DesenharAviso(const Aviso *av){
+    float t = av->tempo;
+
+    const int cx = LARGURA_TELA / 2;
+
+    bool chefe = av->proximoChefe > 0;
+
+    float abre = Rampa(t, 0.0f, 0.3f) * (1.0f - Rampa(t, AVISO_FIM - 0.3f, 0.3f));// 0 = fechada, 1 = aberta
+
+    int altura = (int)(130.0f * abre);
+
+    if (altura < 4){
+        return;
+    }
+
+    int y0 = 290 - altura / 2;// A faixa cresce e encolhe a partir do meio
+
+    Color fundo = chefe ? (Color){ 70, 8, 16, 220 } : (Color){ 0, 0, 0, 200 };
+
+    Color borda = chefe ? RED : GOLD;
+
+    DrawRectangle(0, y0, LARGURA_TELA, altura, fundo);
+
+    DrawRectangle(0, y0, LARGURA_TELA, 3, borda);
+
+    DrawRectangle(0, y0 + altura - 3, LARGURA_TELA, 3, borda);
+
+    float a = Rampa(t, 0.25f, 0.3f) * (1.0f - Rampa(t, AVISO_FIM - 0.6f, 0.3f));
+
+    if (a <= 0.0f){
+        return;
+    }
+
+    const char *linha1 = TextFormat("ONDA %d CONCLUIDA!", av->onda);
+
+    DrawText(linha1, cx - MeasureText(linha1, 40) / 2, 245, 40, Fade(GOLD, a));
+
+    if (chefe){
+        float pisca = 0.65f + 0.35f * sinf(t * 12.0f);// O aviso do chefe pisca
+
+        const char *linha2 = TextFormat("CUIDADO! %s se aproxima", NomeDoChefe(av->proximoChefe));
+
+        DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a * pisca));
+    }
+    else {
+        const char *linha2 = TextFormat("Prepare-se para a onda %d", av->onda + 1);
+
+        DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+    }
+}
+
+static void AvisoIniciar(Fases *fases, ListaProjeteis *projeteis, int onda, int proximoChefe){
+    Aviso *av = &fases->aviso;
+
+    av->ativo = true;
+
+    av->tempo = 0.0f;
+
+    av->fase = fases->faseAtual;
+
+    av->onda = onda;
+
+    av->proximoChefe = proximoChefe;
+
+    ProjeteisLimpar(projeteis);// Tiros que sobraram no ar somem, senao ficariam parados atras da faixa
 }
 
 static void DesenharConfete(float t, float alphaGeral){
@@ -210,11 +299,21 @@ static void TransicaoIniciar(Fases *fases, ListaProjeteis *projeteis, int origem
 }
 
 bool FasesEmTransicao(const Fases *fases){
-    return fases != NULL && fases->transicao.ativa;
+    return fases != NULL && (fases->transicao.ativa || fases->aviso.ativo);
 }
 
 void FasesDesenharTransicao(const Fases *fases){
-    if (fases == NULL || !fases->transicao.ativa){
+    if (fases == NULL){
+        return;
+    }
+
+    if (fases->aviso.ativo){
+        DesenharAviso(&fases->aviso);// Faixa de fim de onda
+
+        return;
+    }
+
+    if (!fases->transicao.ativa){
         return;
     }
 
@@ -263,9 +362,25 @@ void FasesDesenharTransicao(const Fases *fases){
 
         float aSub = Rampa(t, 2.8f, 0.4f) * (1.0f - Rampa(t, 3.9f, 0.5f));
 
+        const char *nomeFase = NomeDaFase(tr->faseDestino);
+
+        int yChefe = 340;
+
+        int tamanhoChefe = 30;
+
+        if (nomeFase[0] != '\0'){
+            // A fase tem nome: ele ocupa a linha principal e o chefe desce para uma linha menor
+
+            DrawText(nomeFase, cx - MeasureText(nomeFase, 30) / 2, 340, 30, Fade(RAYWHITE, aSub));
+
+            yChefe = 385;
+
+            tamanhoChefe = 20;
+        }
+
         const char *sub = TextFormat("Chefe: %s", NomeDoChefe(tr->faseDestino));
 
-        DrawText(sub, cx - MeasureText(sub, 30) / 2, 340, 30, Fade(LIGHTGRAY, aSub));
+        DrawText(sub, cx - MeasureText(sub, tamanhoChefe) / 2, yChefe, tamanhoChefe, Fade(LIGHTGRAY, aSub));
 
         DrawText("ENTER para pular", LARGURA_TELA - MeasureText("ENTER para pular", 20) - 20, ALTURA_TELA - 36, 20, Fade(LIGHTGRAY, aTitulo * 0.8f));
     }
@@ -280,6 +395,8 @@ void FasesInicializar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *pro
     fases->ondaFaseUm = 1;// Define a onda da fase 1 como 1, indicando que a primeira onda de inimigos será criada na fase 1
 
     fases->chefe = (Chefe){0};
+
+    fases->aviso = (Aviso){0};
 
     fases->transicao = (Transicao){0};// Sem animacao: o jogo comeca no menu, o cartao da fase 1 aparece ao clicar em JOGAR
     // Inicializa a estrutura do chefe da fase com valores padrão (zeros), indicando que não há chefe ativo no momento
@@ -360,19 +477,39 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
         return;
     }
 
+    if (fases->aviso.ativo){
+        // Faixa de fim de onda: so o relogio dela anda. Quando acaba, aparece o que vem a seguir
+
+        Aviso *av = &fases->aviso;
+
+        av->tempo += dt;
+
+        if (av->tempo >= AVISO_FIM){
+            av->ativo = false;
+
+            if (av->proximoChefe > 0){
+                ChefeCriar(fases, av->proximoChefe);
+            }
+            else {
+                fases->ondaFaseUm = av->onda + 1;
+
+                InimigosCriarOnda(inimigos, av->fase == 3 ? INIMIGO_NINJA : INIMIGO_GUARDA);
+            }
+        }
+
+        return;
+    }
+
     if (fases->faseAtual == 1 && !fases->chefe.ativo && fases->chefe.tipo == 0){
 // Se a fase atual for 1, o chefe não estiver ativo e o tipo do chefe for 0 (não definido), verifica se todos os inimigos foram eliminados para avançar para a próxima onda ou criar o chefe da fase
 
         if (InimigosContar(inimigos) == 0){// Se não houver inimigos ativos na lista, verifica se é necessário avançar para a próxima onda ou criar o chefe da fase
 
-            if (fases->ondaFaseUm == 1){// Se a onda da fase 1 for 1, define a onda da fase 1 como 2 e cria uma nova onda de inimigos
-                fases->ondaFaseUm = 2;// Avança para a segunda onda da fase 1
-
-                InimigosCriarOnda(inimigos, INIMIGO_GUARDA);// Cria a segunda onda de inimigos na fase 1
-
+            if (fases->ondaFaseUm == 1){// Onda 1 da fase 1 acabou: faixa de aviso e, quando ela termina, a onda 2 aparece
+                AvisoIniciar(fases, projeteis, 1, 0);
             }
-            else {// Se a onda da fase 1 for 2, cria o chefe da fase 1 (tipo 1) e marca o chefe como ativo
-                ChefeCriar(fases, 1);
+            else {// Onda 2 da fase 1 acabou: faixa de aviso e, quando ela termina, o chefe da fase 1 (tipo 1) aparece
+                AvisoIniciar(fases, projeteis, 2, 1);
             }
         }
     }
@@ -380,7 +517,7 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
     if (fases->faseAtual == 3 && !fases->chefe.ativo && fases->chefe.tipo == 0){
         // Fase 3: quando todos os ninjas da onda forem eliminados, o chefe final (tipo 3) aparece
         if (InimigosContar(inimigos) == 0){
-            ChefeCriar(fases, 3);
+            AvisoIniciar(fases, projeteis, 1, 3);// Onda de ninjas acabou: faixa de aviso e, quando ela termina, o chefe final (tipo 3) aparece
         }
     }
 
@@ -507,7 +644,7 @@ void FasesDesenhar(const Fases *fases){
         // Desenha a parte frontal do chefe como um retângulo branco na posição relativa ao corpo do chefe, mas no lado oposto
     }
 
-    const char *nome = c->tipo == 1 ? "Escorpião" : (c->tipo == 2 ? "Hulk" : "Jean Grey");
+    const char *nome = NomeDoChefe(c->tipo);// Mesmo nome das animacoes: so existe um lugar para editar (NomeDoChefe)
     // Define o nome do chefe com base no tipo do chefe (tipo 1 = "Escorpião", tipo 2 = "Hulk", tipo 3 = "Jean Grey")
 
     DrawText(nome, LARGURA_TELA / 2 - 60, 18, 20, RAYWHITE);

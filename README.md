@@ -1,6 +1,7 @@
 # Homem-Aranha: Um Novo Dia
 
-Jogo estilo *Space Invaders* em C com [raylib](https://www.raylib.com/). Três fases: ondas de ninjas, Escorpião, Hulk e Jean Grey.
+Jogo estilo *Space Invaders* em C com [raylib](https://www.raylib.com/).<br>
+Três fases: ondas de guardas e ninjas, e como chefes temos Escorpião, Hulk e Jean Grey.
 
 ## Controles
 

@@ -15,7 +15,7 @@ Três fases: ondas de guardas e ninjas, e como chefes temos Escorpião, Hulk e J
 
 ## Preview
 
-- [veja um vídeo da gameplay aqui]()
+- [veja um vídeo da gameplay aqui](https://github.com/Digao-1234/Spider-man-Brand-New-Day/raw/refs/heads/main/video..mp4)
 ## Dependências
 
 Para compilar e executar o projeto, é necessário ter:

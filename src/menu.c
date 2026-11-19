@@ -12,7 +12,13 @@
 #define MENU_BOTAO_LARGURA 320
 #define MENU_BOTAO_ALTURA 40
 #define MENU_BOTAO_Y0 436   // Botoes mais abaixo para nao cobrir o Homem-Aranha do fundo. Para subir/descer todos, mude so este valor
-#define MENU_BOTAO_PASSO 50
+#define MENU_BOTAO_PASSO 51
+
+// Altura (centro das letras maiusculas, em pixels da tela) de cada texto. Medidas na imagem de referencia do menu
+#define MENU_Y_TITULO 127.0f
+#define MENU_Y_SUBTITULO 189.0f
+#define MENU_Y_RECORDE 242.5f
+#define MENU_Y_RODAPE 621.0f
 
 static const char *textosOpcoes[MENU_NUM_OPCOES] = { "JOGAR", "COMO JOGAR", "SAIR" };
 
@@ -26,9 +32,21 @@ static Rectangle MenuBotao(int i){
             // Botao centralizado horizontalmente, com altura e largura fixas, e espaçamento vertical entre os botoes
 }
 
-static void DesenharTextoCentralizado(const char *texto, int y, int tamanho, Color cor){
-    DrawText(texto, (LARGURA_TELA - MeasureText(texto, tamanho)) / 2, y, tamanho, cor);
-    // Desenha o texto centralizado horizontalmente na tela, com a posição vertical, tamanho e cor especificados
+static void DesenharTexto(const char *texto, float x, float centroY, int tamanho, bool centralizar, Color cor){
+    // Desenha o texto com a fonte padrao da raylib, com o CENTRO das letras maiusculas em centroY. Se centralizar for true, x e o meio do texto; se nao, e o inicio
+    // A fonte padrao e uma imagem de 10 px de altura: tamanhos multiplos de 10 (10, 20, 30, 40...) deixam os pixels das letras nitidos
+
+    Font fonte = GetFontDefault();
+
+    float espaco = (float)(tamanho / 10);// Mesmo espacamento do DrawText da raylib
+
+    float topo = centroY - 0.4f * (float)tamanho;// Distancia do topo da linha ate o centro das maiusculas. Se o texto parecer alto/baixo demais, ajuste este 0.4
+
+    if (centralizar){
+        x -= MeasureTextEx(fonte, texto, (float)tamanho, espaco).x / 2.0f;
+    }
+
+    DrawTextEx(fonte, texto, (Vector2){ roundf(x), roundf(topo) }, (float)tamanho, espaco, cor);
 }
 
 static MenuAcao MenuAtivarOpcao(Menu *menu){
@@ -123,90 +141,80 @@ MenuAcao MenuAtualizar(Menu *menu, float dt){
 }
 
 static void MenuDesenharControles(void){
-    // Desenha a tela de controles, mostrando as instruções para o jogador sobre como jogar o jogo
-    DesenharTextoCentralizado("COMO JOGAR", 80, 44, RAYWHITE);
+    // Desenha a tela de controles, mostrando as instrucoes para o jogador sobre como jogar o jogo
+    DesenharTexto("COMO JOGAR", LARGURA_TELA / 2.0f, 105.0f, 40, true, RAYWHITE);
 
-    DrawRectangle(180, 160, LARGURA_TELA - 360, 300, (Color){ 8, 12, 29, 210 });
-    // Desenha um retângulo de fundo para a área de instruções, com cor semi-transparente para destacar o texto
+    DrawRectangle(100, 160, LARGURA_TELA - 200, 300, (Color){ 8, 12, 29, 235 });
+    // Painel mais largo que antes: a fonte padrao em 20 px precisa de mais espaco para a linha mais longa
 
-    DrawRectangleLines(180, 160, LARGURA_TELA - 360, 300, (Color){ 70, 90, 130, 255 });
-    // Desenha a borda do retângulo de instruções, com cor sólida para destacar a área de instruções
+    DrawRectangleLines(100, 160, LARGURA_TELA - 200, 300, (Color){ 70, 90, 130, 255 });
 
-    const char *linhas[] = {
-        "A / D ou setas    mover",
-        "ESPACO            atirar teia (segure para continuar atirando)",
-        "P                 pausar / continuar",
-        "ENTER             jogar de novo (na tela de vitoria/derrota)",
-        "ESC               voltar ao menu"
+    const char *teclas[] = { "A / D ou setas", "ESPACO", "P", "ENTER", "ESC" };
+
+    const char *acoes[] = {
+        "mover",
+        "atirar teia (segure para continuar atirando)",
+        "pausar / continuar",
+        "jogar de novo (na tela de vitoria/derrota)",
+        "voltar ao menu"
     };
 
     for (int i = 0; i < 5; i++){
-        // Itera sobre as linhas de instruções e desenha cada uma na tela, espaçando-as verticalmente para melhor legibilidade
-        DrawText(linhas[i], 210, 190 + i * 48, 18, RAYWHITE);
+        // Duas colunas: a tecla (azul) e o que ela faz (branco), uma linha a cada 48 pixels
+        float y = 205.0f + (float)i * 48.0f;
+
+        DesenharTexto(teclas[i], 130.0f, y, 20, false, SKYBLUE);
+
+        DesenharTexto(acoes[i], 340.0f, y, 20, false, RAYWHITE);
     }
 
-    DesenharTextoCentralizado("ENTER ou ESC para voltar", ALTURA_TELA - 50, 18, LIGHTGRAY);
-    // Desenha a instrução para voltar ao menu principal na parte inferior da tela, com cor clara para destaque
+    DesenharTexto("ENTER ou ESC para voltar", LARGURA_TELA / 2.0f, ALTURA_TELA - 45.0f, 20, true, LIGHTGRAY);
 }
 
 void MenuDesenhar(const Menu *menu, int recorde){
-    // Desenha o menu principal, incluindo o fundo, título, opções e informações adicionais, proporcionando uma interface visual para o jogador interagir com o jogo
+    // Desenha o menu principal, incluindo o fundo, titulo, opcoes e o recorde
     ClearBackground((Color){ 8, 12, 29, 255 });
-    // Limpa a tela com uma cor de fundo sólida, preparando-a para desenhar os elementos do menu
+    // Limpa a tela com uma cor de fundo solida, preparando-a para desenhar os elementos do menu
 
-    bool temFundo = SpritesDesenharFundo(SPR_FUNDO_MENU, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
-    // Tenta desenhar o sprite do fundo do menu, retornando true se o sprite foi carregado corretamente e desenhado com sucesso
+    // Cenario do menu (assets/sprites/fundo_menu.png), na luz total, sem escurecer. Sem ele usa o cenario da fase 1 e, sem ele tambem, o fundo de estrelas
+    // ATENCAO: o fundo_menu.png tem que ser so o cenario, sem texto desenhado nele, porque o titulo e os botoes sao desenhados aqui pelo codigo
+    bool temFundo = SpritesDesenharFundo(SPR_FUNDO_MENU, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE)
+                 || SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
 
-    if (!temFundo){// Se o sprite do fundo do menu nao carregou, desenha o cenario da fase 1 como fundo alternativo
-        temFundo = SpritesDesenharFundo(SPR_FUNDO_FASE1, (float)LARGURA_TELA, (float)ALTURA_TELA, WHITE);
-    }
-
-    if (temFundo){// Se o sprite do fundo foi desenhado, escurece a tela para que o titulo e os botoes fiquem legiveis
-        DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 140 });
-    }
-    else {
+    if (!temFundo){
         for (int i = 0; i < 70; i++){
             DrawPixel((i * 137 + 29) % LARGURA_TELA, (i * 83 + 17) % ALTURA_TELA, (Color){ 72, 85, 125, 255 });
         }
     }
 
     if (menu->mostrandoControles){
+        DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 150 });
+        // Escurece o cenario so atras da tela de controles; o menu inicial fica com o cenario na luz total
+
         MenuDesenharControles();
 
         return;
     }
 
-    SpritesDesenhar(SPR_JOGADOR_PARADO, 830.0f, (float)ALTURA_TELA - 30.0f, 220.0f, 0.0f, WHITE);
-    // Se o sprite nao carregou, simplesmente nao aparece: o menu continua funcionando
+    float meio = LARGURA_TELA / 2.0f;
 
-    DesenharTextoCentralizado("HOMEM-ARANHA", 112, 58, (Color){ 0, 0, 0, 200 }); // sombra
-    DesenharTextoCentralizado("HOMEM-ARANHA", 108, 58, (Color){ 220, 30, 45, 255 });
-    DesenharTextoCentralizado("UM NOVO DIA", 178, 28, RAYWHITE);
+    DesenharTexto("HOMEM-ARANHA", meio, MENU_Y_TITULO, 60, true, (Color){ 220, 30, 45, 255 });
+
+    DesenharTexto("UM NOVO DIA", meio, MENU_Y_SUBTITULO, 30, true, RAYWHITE);
+
+    DesenharTexto(TextFormat("RECORDE: %d", recorde), meio, MENU_Y_RECORDE, 20, true, GOLD);
 
     for (int i = 0; i < MENU_NUM_OPCOES; i++){
         Rectangle botao = MenuBotao(i);
 
         bool selecionado = (i == menu->opcao);
 
-        Color fundo = selecionado ? (Color){ 200, 30, 40, (unsigned char)(215.0f + 35.0f * sinf(menu->tempo * 5.0f)) }
-                                  : (Color){ 20, 30, 60, 190 };
-
-        DrawRectangleRec(botao, fundo);
+        DrawRectangleRec(botao, selecionado ? (Color){ 200, 30, 40, 255 } : (Color){ 20, 30, 60, 255 });
 
         DrawRectangleLinesEx(botao, 2.0f, selecionado ? RAYWHITE : (Color){ 70, 90, 130, 255 });
 
-        int tamanho = 24;
-
-        int larguraTexto = MeasureText(textosOpcoes[i], tamanho);
-
-        DrawText(textosOpcoes[i],
-                 (int)(botao.x + (botao.width - larguraTexto) / 2.0f),
-                 (int)(botao.y + (botao.height - tamanho) / 2.0f),
-                 tamanho,
-                 selecionado ? RAYWHITE : LIGHTGRAY);
+        DesenharTexto(textosOpcoes[i], botao.x + botao.width / 2.0f, botao.y + botao.height / 2.0f, 20, true, selecionado ? RAYWHITE : LIGHTGRAY);
     }
 
-    DesenharTextoCentralizado(TextFormat("RECORDE: %d", recorde), 232, 20, GOLD);// Logo abaixo do titulo (os botoes ficam la embaixo)
-
-    DesenharTextoCentralizado("W/S ou setas: escolher   |   ENTER ou clique: confirmar   |   ESC: sair", ALTURA_TELA - 28, 15, LIGHTGRAY);
+    DesenharTexto("W/S ou setas: escolher   |   ENTER ou clique: confirmar   |   ESC: sair", meio, MENU_Y_RODAPE, 15, true, LIGHTGRAY);
 }

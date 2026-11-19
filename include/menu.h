@@ -15,7 +15,7 @@ typedef struct Menu{
 
     bool mostrandoControles; // true = esta na tela "COMO JOGAR"
 
-    float tempo; // Segundos desde que o menu abriu (so serve para a animacao do botao)
+    float tempo; // Segundos desde que o menu abriu (reservado para animacoes; o desenho atual nao usa)
 } Menu;
 
 void MenuInicializar(Menu *menu); // Volta o menu ao estado inicial (botao JOGAR selecionado)

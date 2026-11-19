@@ -12,6 +12,9 @@ Jogo estilo *Space Invaders* em C com [raylib](https://www.raylib.com/). Três f
 | ENTER | jogar de novo (na tela de vitória/derrota) |
 | ESC | sair (o recorde da partida em curso é salvo) |
 
+## Preview
+
+- [veja um vídeo da gameplay aqui]()
 ## Dependências
 
 Para compilar e executar o projeto, é necessário ter:

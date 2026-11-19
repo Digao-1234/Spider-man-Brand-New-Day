@@ -12,6 +12,8 @@
 
 #include <stddef.h>
 
+#include <math.h>
+
 
 static TipoProjetil TipoTiroDoChefe(int tipo){// Cada chefe dispara o seu proprio tipo de projetil (muda so o visual)
     if (tipo == 1){
@@ -94,6 +96,181 @@ static void FaseComecar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *p
     }
 }
 
+// ---------- Transicao entre fases ----------
+// Linha do tempo (segundos). Com origem > 0:
+//   0.0 - 1.8  "FASE X CONCLUIDA!" aparece sobre a cena congelada, que escurece
+//   1.8 - 2.3  escurece ate o preto total
+//   2.3        (tela preta) a fase seguinte e criada por baixo
+//   2.5 - 3.9  cartao "FASE Y" com o nome do chefe
+//   3.9 - 4.5  o preto some, revelando a nova fase
+// Na abertura do jogo (origem 0) a animacao comeca direto em 2.3.
+// Os textos usam tamanhos multiplos de 10 (fonte padrao da raylib), como o menu, para os pixels ficarem nitidos.
+#define TRANSICAO_TROCA 2.3f
+#define TRANSICAO_FIM 4.5f
+
+// Final do jogo (fase 3 concluida, destino 0): a animacao termina na tela de vitoria, sem corte.
+//   0.0 - 0.5  a cena escurece (ate 55%) e "FASE 3 CONCLUIDA!" aparece, com confete caindo
+//   0.5 - 2.6  texto e confete
+//   2.6 - 3.2  texto some e a cena escurece ate 195/255, o mesmo escuro da tela de vitoria
+//   3.2        o estado vira JOGO_VITORIA e o jogo mostra "VOCE VENCEU!"
+#define TRANSICAO_FINAL_FIM 3.2f
+
+static float Rampa(float t, float inicio, float duracao){
+    // 0 antes de "inicio", 1 depois de "inicio + duracao", e uma subida suave (smoothstep) entre os dois
+
+    float v = (t - inicio) / duracao;
+
+    if (v < 0.0f){
+        v = 0.0f;
+    }
+
+    if (v > 1.0f){
+        v = 1.0f;
+    }
+
+    return v * v * (3.0f - 2.0f * v);
+}
+
+static const char *NomeDoChefe(int tipo){
+    return tipo == 1 ? "Escorpião" : (tipo == 2 ? "Hulk" : "Jean Grey");
+}
+
+static const char *ChefeDerrotado(int tipo){
+    // "Escorpião derrotado!", "Hulk derrotado!", "Jean Grey derrotada!" (concordancia certa)
+
+    return TextFormat("%s %s", NomeDoChefe(tipo), tipo == 3 ? "derrotada!" : "derrotado!");
+}
+
+static void DesenharConfete(float t, float alphaGeral){
+    // Chuva de confete. As posicoes saem de formulas fixas (sem aleatorio), entao a animacao e sempre igual
+
+    Color cores[5] = { GOLD, SKYBLUE, RED, GREEN, RAYWHITE };
+
+    for (int i = 0; i < 60; i++){
+        float atraso = (float)((i * 53) % 100) / 100.0f * 1.2f;// Cada pedaco comeca a cair num momento diferente
+
+        if (t < atraso){
+            continue;
+        }
+
+        float velocidade = 110.0f + (float)((i * 37) % 110);
+
+        float y = (t - atraso) * velocidade - 20.0f;
+
+        if (y > ALTURA_TELA){
+            continue;
+        }
+
+        float x = (float)((i * 137 + 29) % LARGURA_TELA) + sinf(t * 3.0f + (float)i) * 14.0f;// Balanca de leve para os lados
+
+        DrawRectangle((int)x, (int)y, 6, 10, Fade(cores[i % 5], alphaGeral));
+    }
+}
+
+static void DesenharTransicaoFinal(float t){
+    float escuro = 0.55f * Rampa(t, 0.0f, 0.5f) + (195.0f / 255.0f - 0.55f) * Rampa(t, 2.6f, 0.6f);
+    // Termina em 195/255: igual ao escuro da tela de vitoria, entao a troca para ela nao "pisca"
+
+    DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, Fade(BLACK, escuro));
+
+    float a = Rampa(t, 0.1f, 0.4f) * (1.0f - Rampa(t, 2.6f, 0.5f));// Aparece rapido e some quando o escuro final chega
+
+    DesenharConfete(t, a);
+
+    if (a > 0.0f){
+        const int cx = LARGURA_TELA / 2;
+
+        const char *linha1 = "FASE 3 CONCLUIDA!";
+
+        DrawText(linha1, cx - MeasureText(linha1, 40) / 2, 240, 40, Fade(GOLD, a));
+
+        const char *linha2 = ChefeDerrotado(3);
+
+        DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+
+        DrawText("ENTER para pular", LARGURA_TELA - MeasureText("ENTER para pular", 20) - 20, ALTURA_TELA - 36, 20, Fade(LIGHTGRAY, a * 0.8f));
+    }
+}
+
+static void TransicaoIniciar(Fases *fases, ListaProjeteis *projeteis, int origem, int destino){
+    Transicao *tr = &fases->transicao;
+
+    tr->ativa = true;
+
+    tr->faseOrigem = origem;
+
+    tr->faseDestino = destino;
+
+    tr->tempo = origem == 0 ? TRANSICAO_TROCA : 0.0f;
+
+    tr->trocou = (origem == 0);// Na abertura o cenario da fase ja esta pronto, so falta o cartao
+    // (destino 0 = final do jogo: nao existe fase seguinte para criar)
+
+    ProjeteisLimpar(projeteis);// Tiros que estavam no ar somem, senao ficariam parados na tela durante a animacao
+}
+
+bool FasesEmTransicao(const Fases *fases){
+    return fases != NULL && fases->transicao.ativa;
+}
+
+void FasesDesenharTransicao(const Fases *fases){
+    if (fases == NULL || !fases->transicao.ativa){
+        return;
+    }
+
+    const Transicao *tr = &fases->transicao;
+
+    float t = tr->tempo;
+
+    if (tr->faseDestino == 0){
+        DesenharTransicaoFinal(t);// Fim do jogo: animacao propria, que termina na tela de vitoria
+
+        return;
+    }
+
+    float preto = 0.55f * Rampa(t, 0.0f, 0.5f) + 0.45f * Rampa(t, 1.8f, 0.5f) - 1.0f * Rampa(t, 3.9f, 0.6f);
+
+    DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, Fade(BLACK, preto));
+
+    const int cx = LARGURA_TELA / 2;
+
+    if (tr->faseOrigem > 0){
+        float a = Rampa(t, 0.1f, 0.4f) * (1.0f - Rampa(t, 1.8f, 0.4f));
+
+        if (a > 0.0f){
+            const char *linha1 = TextFormat("FASE %d CONCLUIDA!", tr->faseOrigem);
+
+            DrawText(linha1, cx - MeasureText(linha1, 40) / 2, 240, 40, Fade(GREEN, a));
+
+            const char *linha2 = ChefeDerrotado(tr->faseOrigem);
+
+            DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+        }
+    }
+
+    float aTitulo = Rampa(t, 2.5f, 0.4f) * (1.0f - Rampa(t, 3.9f, 0.5f));
+
+    if (aTitulo > 0.0f){
+        int sobe = (int)((1.0f - Rampa(t, 2.5f, 0.6f)) * 24.0f);// O titulo sobe 24 px enquanto aparece
+
+        const char *titulo = TextFormat("FASE %d", tr->faseDestino);
+
+        DrawText(titulo, cx - MeasureText(titulo, 70) / 2, 230 + sobe, 70, Fade(RAYWHITE, aTitulo));
+
+        int larguraLinha = (int)(380.0f * Rampa(t, 2.5f, 0.7f));// Linha vermelha que cresce do centro para as pontas
+
+        DrawRectangle(cx - larguraLinha / 2, 320, larguraLinha, 4, Fade((Color){ 220, 30, 45, 255 }, aTitulo));
+
+        float aSub = Rampa(t, 2.8f, 0.4f) * (1.0f - Rampa(t, 3.9f, 0.5f));
+
+        const char *sub = TextFormat("Chefe: %s", NomeDoChefe(tr->faseDestino));
+
+        DrawText(sub, cx - MeasureText(sub, 30) / 2, 340, 30, Fade(LIGHTGRAY, aSub));
+
+        DrawText("ENTER para pular", LARGURA_TELA - MeasureText("ENTER para pular", 20) - 20, ALTURA_TELA - 36, 20, Fade(LIGHTGRAY, aTitulo * 0.8f));
+    }
+}
+
 void FasesInicializar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *projeteis){// Inicializa as fases do jogo, definindo a fase atual como 1, a onda da fase 1 como 1, e inicializando as listas de inimigos e projéteis
     if (fases == NULL || inimigos == NULL || projeteis == NULL){
          return;// Verifica se algum dos ponteiros é nulo antes de inicializar as fases
@@ -103,6 +280,8 @@ void FasesInicializar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *pro
     fases->ondaFaseUm = 1;// Define a onda da fase 1 como 1, indicando que a primeira onda de inimigos será criada na fase 1
 
     fases->chefe = (Chefe){0};
+
+    fases->transicao = (Transicao){0};// Sem animacao: o jogo comeca no menu, o cartao da fase 1 aparece ao clicar em JOGAR
     // Inicializa a estrutura do chefe da fase com valores padrão (zeros), indicando que não há chefe ativo no momento
 
     InimigosInicializar(inimigos);
@@ -120,12 +299,66 @@ void FasesReiniciar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
          return;// Verifica se algum dos ponteiros é nulo antes de reiniciar as fases
     }
     FaseComecar(fases, inimigos, projeteis, 1);// Reinicia o jogo, começando novamente na fase 1, limpando as listas de inimigos e projéteis, e criando a primeira onda de inimigos
+
+    TransicaoIniciar(fases, projeteis, 0, 1);// Abre a partida com o cartao "FASE 1"
 }
 
 void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *projeteis, float dt, EstadoJogo *estado){
     if (fases == NULL || inimigos == NULL || projeteis == NULL || estado == NULL || *estado != JOGO_EM_ANDAMENTO){
              return;// Verifica se algum dos ponteiros é nulo ou se o estado do jogo não está em andamento antes de atualizar as fases
         }
+
+    if (fases->transicao.ativa){
+        // Durante a animacao so o relogio dela anda: chefes e ondas ficam parados ate ela terminar
+
+        Transicao *tr = &fases->transicao;
+
+        if (tr->faseDestino == 0){
+            // Final do jogo: nao ha fase para criar. Quando a animacao acaba, o jogo entra no estado de vitoria
+
+            if (IsKeyPressed(KEY_ENTER)){
+                tr->tempo = TRANSICAO_FINAL_FIM;// ENTER pula direto para o fim
+            }
+
+            tr->tempo += dt;
+
+            if (tr->tempo >= TRANSICAO_FINAL_FIM){
+                tr->ativa = false;
+
+                *estado = JOGO_VITORIA;
+            }
+
+            return;
+        }
+
+        if (IsKeyPressed(KEY_ENTER)){
+            // ENTER pula a animacao. Se ainda nao trocou de fase, troca agora
+
+            if (!tr->trocou){
+                FaseComecar(fases, inimigos, projeteis, tr->faseDestino);
+
+                tr->trocou = true;
+            }
+
+            tr->ativa = false;
+
+            return;
+        }
+
+        tr->tempo += dt;
+
+        if (!tr->trocou && tr->tempo >= TRANSICAO_TROCA){
+            FaseComecar(fases, inimigos, projeteis, tr->faseDestino);// A tela esta preta: o cenario novo e criado sem ninguem ver a troca
+
+            tr->trocou = true;
+        }
+
+        if (tr->tempo >= TRANSICAO_FIM){
+            tr->ativa = false;
+        }
+
+        return;
+    }
 
     if (fases->faseAtual == 1 && !fases->chefe.ativo && fases->chefe.tipo == 0){
 // Se a fase atual for 1, o chefe não estiver ativo e o tipo do chefe for 0 (não definido), verifica se todos os inimigos foram eliminados para avançar para a próxima onda ou criar o chefe da fase
@@ -225,13 +458,13 @@ void FasesAtualizar(Fases *fases, ListaInimigos *inimigos, ListaProjeteis *proje
         }
     } 
     else if (fases->chefe.tipo == 1 && fases->chefe.vida == 0){// Se o tipo do chefe for 1 (chefe da fase 1) e sua vida for 0, inicia a fase 2 com o miniboss (tipo 2)
-        FaseComecar(fases, inimigos, projeteis, 2);
+        TransicaoIniciar(fases, projeteis, 1, 2);// Escorpiao derrotado: anima a passagem para a fase 2
     } 
     else if (fases->chefe.tipo == 2 && fases->chefe.vida == 0){// Se o tipo do chefe for 2 (miniboss) e sua vida for 0, inicia a fase 3 com o chefe final (tipo 3)
-        FaseComecar(fases, inimigos, projeteis, 3);
+        TransicaoIniciar(fases, projeteis, 2, 3);// Hulk derrotado: anima a passagem para a fase 3
     } 
     else if (fases->chefe.tipo == 3 && fases->chefe.vida == 0){// Se o tipo do chefe for 3 (chefe final) e sua vida for 0, marca o estado do jogo como vitória, indicando que o jogador venceu o jogo
-        *estado = JOGO_VITORIA;
+        TransicaoIniciar(fases, projeteis, 3, 0);// Jean Grey derrotada: anima o final e so depois mostra a tela de vitoria
     }
 }
 

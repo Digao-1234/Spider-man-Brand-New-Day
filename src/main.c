@@ -124,6 +124,18 @@ static void PartidaAtualizar(Partida *partida, float dt){
         // Limita o tempo delta para evitar atualizações muito grandes, evitando problemas de desempenho
     }
 
+    if (FasesEmTransicao(&partida->fases)){
+        // Animacao entre fases: o jogo fica congelado (jogador, inimigos e tiros nao se mexem) e so a animacao avanca
+
+        FasesAtualizar(&partida->fases, &partida->inimigos, &partida->projeteis, dt, &partida->estado);
+
+        if (partida->estado != JOGO_EM_ANDAMENTO){
+            SalvarRecordeSeNecessario(partida);// A animacao do final acabou de levar o jogo a vitoria: salva o recorde (o fim desta funcao nao roda neste caso)
+        }
+
+        return;
+    }
+
     JogadorAtualizar(&partida->jogador, &partida->projeteis, dt, true);
     // Atualiza o estado do jogador, incluindo sua posição, disparos e invulnerabilidade, com base no tempo delta (dt) e permitindo que o jogador jogue normalmente
 
@@ -224,6 +236,9 @@ static void PartidaDesenhar(const Partida *partida){
 
     DrawText("Mover: A/D ou setas   |   Disparar: ESPACO   |   Pausar: P   |   Menu: ESC", 20, ALTURA_TELA - 28, 15, LIGHTGRAY);
     // Desenha as instruções de controle do jogo na tela, informando ao jogador como mover, disparar, pausar e sair do jogo
+
+    FasesDesenharTransicao(&partida->fases);
+    // Animacao entre fases (fundo escurecendo, "FASE X CONCLUIDA!", cartao da proxima fase). Fica por cima do HUD
 
     if (partida->pausado && partida->estado == JOGO_EM_ANDAMENTO){
         DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 170 });

@@ -140,6 +140,16 @@ static float Rampa(float t, float inicio, float duracao){
 }
 
 // ======================= NOMES (para mudar um nome, edite SO aqui) =======================
+// Cartao de ABERTURA da fase ("FASE 2"): 1 = escreve "Chefe: Hulk" embaixo. 0 = nao escreve, para o jogador nao saber
+// de antemao se a fase tem chefe.
+#define MOSTRAR_CHEFE_NO_CARTAO_DE_ABERTURA 0
+
+// Faixa de fase CONCLUIDA ("FASE 1 CONCLUIDA!"): 1 = escreve "Escorpião derrotado!" embaixo. 0 = nao escreve.
+// Isso fala do chefe que o jogador acabou de vencer, entao nao entrega nada da fase seguinte.
+#define MOSTRAR_CHEFE_DERROTADO_NA_FAIXA 1
+
+// (A barra de vida do chefe e o aviso "CUIDADO!" de fim de onda nao dependem destas chaves.)
+
 // Os nomes dos chefes aparecem na barra de vida, nas animacoes entre fases e no aviso de fim de onda.
 // Se trocar o genero de um chefe (ex.: Jean Grey e feminino), ajuste tambem a funcao ChefeDerrotado mais abaixo.
 static const char *NomeDoChefe(int tipo){
@@ -150,9 +160,9 @@ static const char *NomeDoChefe(int tipo){
 // Exemplo: troque o "" da fase 1 por "O Corredor Verde".
 static const char *NomeDaFase(int fase){
     switch (fase){
-        case 1:  return "";
-        case 2:  return "";
-        default: return "";
+        case 1:  return "Caos Na Prisão";
+        case 2:  return "O Monstro Solto";
+        default: return "Ameaça Nível Omega";
     }
 }
 // ==========================================================================================
@@ -273,9 +283,11 @@ static void DesenharTransicaoFinal(float t){
 
         DrawText(linha1, cx - MeasureText(linha1, 40) / 2, 240, 40, Fade(GOLD, a));
 
-        const char *linha2 = ChefeDerrotado(3);
+        if (MOSTRAR_CHEFE_DERROTADO_NA_FAIXA){
+            const char *linha2 = ChefeDerrotado(3);
 
-        DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+            DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+        }
 
         DrawText("ENTER para pular", LARGURA_TELA - MeasureText("ENTER para pular", 20) - 20, ALTURA_TELA - 36, 20, Fade(LIGHTGRAY, a * 0.8f));
     }
@@ -341,9 +353,11 @@ void FasesDesenharTransicao(const Fases *fases){
 
             DrawText(linha1, cx - MeasureText(linha1, 40) / 2, 240, 40, Fade(GREEN, a));
 
-            const char *linha2 = ChefeDerrotado(tr->faseOrigem);
+            if (MOSTRAR_CHEFE_DERROTADO_NA_FAIXA){
+                const char *linha2 = ChefeDerrotado(tr->faseOrigem);
 
-            DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+                DrawText(linha2, cx - MeasureText(linha2, 20) / 2, 300, 20, Fade(RAYWHITE, a));
+            }
         }
     }
 
@@ -378,9 +392,11 @@ void FasesDesenharTransicao(const Fases *fases){
             tamanhoChefe = 20;
         }
 
-        const char *sub = TextFormat("Chefe: %s", NomeDoChefe(tr->faseDestino));
+        if (MOSTRAR_CHEFE_NO_CARTAO_DE_ABERTURA){
+            const char *sub = TextFormat("Chefe: %s", NomeDoChefe(tr->faseDestino));
 
-        DrawText(sub, cx - MeasureText(sub, tamanhoChefe) / 2, yChefe, tamanhoChefe, Fade(LIGHTGRAY, aSub));
+            DrawText(sub, cx - MeasureText(sub, tamanhoChefe) / 2, yChefe, tamanhoChefe, Fade(LIGHTGRAY, aSub));
+        }
 
         DrawText("ENTER para pular", LARGURA_TELA - MeasureText("ENTER para pular", 20) - 20, ALTURA_TELA - 36, 20, Fade(LIGHTGRAY, aTitulo * 0.8f));
     }

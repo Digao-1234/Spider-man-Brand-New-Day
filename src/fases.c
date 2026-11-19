@@ -161,7 +161,7 @@ static const char *NomeDoChefe(int tipo){
 static const char *NomeDaFase(int fase){
     switch (fase){
         case 1:  return "Caos Na Prisão";
-        case 2:  return "O Monstro Solto";
+        case 2:  return "O Monstro À Solta";
         default: return "Ameaça Nível Omega";
     }
 }

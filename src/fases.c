@@ -168,7 +168,7 @@ static const char *NomeDaFase(int fase){
 // ==========================================================================================
 
 static const char *ChefeDerrotado(int tipo){
-    // "Escorpião derrotado!", "Hulk derrotado!", "Jean Grey derrotada!" (concordancia certa)
+    // "Escorpião derrotado!", "Hulk derrotado!", "Jean Grey derrotada!" 
 
     return TextFormat("%s %s", NomeDoChefe(tipo), tipo == 3 ? "derrotada!" : "derrotado!");
 }
